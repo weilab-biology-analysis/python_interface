@@ -1,6 +1,8 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 
 class Visualizer():
     def __init__(self, learner):
@@ -19,8 +21,12 @@ class Visualizer():
         self.step_test_interval = []
         self.test_metric_record = []
         self.test_loss_record = []
+
         self.roc_data = None
         self.prc_data = None
+
+        self.repres_list = None
+        self.label_list =None
 
     # 四张图Train Acc Curve、Train Loss Curve、Test Acc Curve、Test Loss Curve
     def draw_train_test_curve(self):
@@ -49,7 +55,7 @@ class Visualizer():
         plt.ylabel("Loss", fontsize=20)
         plt.plot(self.step_test_interval, self.test_loss_record)
 
-        plt.savefig('{}/{}.{}'.format(self.IOManager.result_path, self.config.learn_name, self.config.save_figure_type))
+        plt.savefig('{}/{}.{}'.format(self.IOManager.result_path, self.config.learn_name + str(self.config.kmer) + "mer", self.config.save_figure_type))
         plt.show()
 
     def draw_ROC_PRC_curve(self):
@@ -83,9 +89,38 @@ class Visualizer():
         plt.ylabel('Precision',fontdict={'weight': 'normal', 'size': 20})
         plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
         plt.ylim([0.0, 1.05])
-        plt.xlim([0.0, 1.05])
-        plt.title('Precision Recall curve', fontdict={'weight': 'normal', 'size': 20})
+        plt.xlim([0.0, 1.0])
+        plt.title('Precision Recall curve', fontdict={'weight': 'normal', 'size': 23})
         plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 18})
 
         plt.savefig('{}/{}.{}'.format(self.IOManager.result_path, self.config.learn_name+'ROC_PRC', self.config.save_figure_type))
+        plt.show()
+
+    def draw_tsne(self):
+        data = self.repres_list
+        data_index = self.label_list
+        data_label = None
+
+        print('processing data')
+        X_tsne = TSNE(n_components=2).fit_transform(data)  # [num_samples, n_components]
+        print('processing data over')
+
+        font = {"color": "darkred", "size": 16, "family": "serif"}
+        # plt.style.use("dark_background")
+        plt.style.use("default")
+
+        plt.figure()
+        plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=data_index, alpha=0.6, cmap=plt.cm.get_cmap('rainbow', 2))
+        plt.title('{}-mer t-SNE Visualisation '.format(self.config.kmer), fontdict=font)
+
+        if data_label:
+            for i in range(len(X_tsne)):
+                plt.annotate(data_label[i], xy=(X_tsne[:, 0][i], X_tsne[:, 1][i]),
+                             xytext=(X_tsne[:, 0][i] + 1, X_tsne[:, 1][i] + 1))
+        if data_label is None:
+            cbar = plt.colorbar(ticks=range(2))
+            cbar.set_label(label='digit value', fontdict=font)
+            plt.clim(0 - 0.5, 2 - 0.5)
+
+        plt.savefig('{}/{}.{}'.format(self.IOManager.result_path, "t-sne",self.config.save_figure_type))
         plt.show()

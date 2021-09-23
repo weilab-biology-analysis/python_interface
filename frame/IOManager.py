@@ -14,7 +14,7 @@ class IOManager():
         self.log = None
 
     def initialize(self):
-        self.result_path = '../result/' + self.config.learn_name
+        self.result_path = '../result/' + self.config.learn_name + '/' + str(self.config.kmer) + "mer"
         if not os.path.exists(self.result_path):
             os.makedirs(self.result_path)
         # 生成一份pkl的文件
@@ -30,7 +30,8 @@ class IOManager():
 
     # 保存最佳模型
     def save_model_dict(self, model_dict, save_prefix, metric_name, metric_value):
-        filename = '{}, {}[{:.3f}].pt'.format(save_prefix, metric_name, metric_value)
+        # filename = '{}, {}[{:.3f}].pt'.format(save_prefix, metric_name, metric_value)
+        filename = '{}.pt'.format(save_prefix, metric_name, metric_value)
         save_path_pt = os.path.join(self.result_path, filename)
         torch.save(model_dict, save_path_pt, _use_new_zipfile_serialization=False)
 

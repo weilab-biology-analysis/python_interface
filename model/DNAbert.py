@@ -56,7 +56,7 @@ class BERT(nn.Module):
         representation = self.bert(input_ids.cuda(), token_type_ids.cuda(), attention_mask.cuda())["pooler_output"]
         output = self.classification(representation)
 
-        return output
+        return output, representation
 
 
 

@@ -23,6 +23,8 @@ class ModelManager():
 
         # supervised learning
         self.best_performance = None
+        self.best_repres_list = None
+        self.best_label_list = None
         self.test_performance = []
         self.valid_performance = []
         self.avg_test_loss = 0
@@ -84,9 +86,14 @@ class ModelManager():
         if self.mode == 'train-test':
             train_dataloader = self.dataManager.get_dataloder(name='train_set')
             test_dataloader = self.dataManager.get_dataloder(name='test_set')
-            best_performance, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
+            best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
             self.visualizer.roc_data = ROC
             self.visualizer.prc_data = PRC
+            self.visualizer.repres_list = best_repres_list
+            self.visualizer.label_list = best_label_list
+
+            self.best_repres_list = best_repres_list
+            self.best_label_list = best_label_list
             self.best_performance = best_performance
             self.IOManager.log.Info('Best Performance: {}'.format(self.best_performance))
             self.IOManager.log.Info('Performance: {}'.format(self.test_performance))
@@ -233,7 +240,7 @@ class ModelManager():
         for epoch in range(1, self.config.epoch + 1):
             for batch in train_dataloader:
                 data, label = batch
-                logits = self.model(data)
+                logits, _ = self.model(data)
                 train_loss = self.__get_loss(logits, label)
 
                 self.optimizer.zero_grad()
@@ -275,12 +282,14 @@ class ModelManager():
         best_performance = None
         best_ROC = None
         best_PRC = None
+        best_repres_list = None
+        best_label_list = None
 
         for epoch in range(1, self.config.epoch + 1):
             for batch in train_dataloader:
                 data, label = batch
                 # print(label)
-                logits = self.model(data)
+                logits, _ = self.model(data)
                 train_loss = self.__get_loss(logits, label)
 
                 self.optimizer.zero_grad()
@@ -303,7 +312,7 @@ class ModelManager():
 
             '''Periodic Test'''
             if epoch % self.config.interval_test == 0:
-                test_performance, avg_test_loss, ROC_data, PRC_data = self.__SL_test(test_dataloader)
+                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list = self.__SL_test(test_dataloader)
                 self.visualizer.step_test_interval.append(epoch)
                 self.visualizer.test_metric_record.append(test_performance[0])
                 self.visualizer.test_loss_record.append(avg_test_loss)
@@ -322,10 +331,12 @@ class ModelManager():
                     best_performance = test_performance
                     best_ROC = ROC_data
                     best_PRC = PRC_data
+                    best_repres_list = repres_list
+                    best_label_list = label_list
                     if self.config.save_best :
                         self.IOManager.save_model_dict(self.model.state_dict(), self.config.model_save_name,
                                                        'MCC', best_mcc)
-        return best_performance, best_ROC, best_PRC
+        return best_performance, best_repres_list, best_label_list, best_ROC, best_PRC
 
     def __SL_test(self, dataloader):
         corrects = 0
@@ -336,11 +347,17 @@ class ModelManager():
         label_pred = []
         label_real = []
 
+        repres_list = []
+        label_list = []
+
         with torch.no_grad():
             for batch in dataloader:
                 data, label = batch
-                logits = self.model(data)
+                logits, representation = self.model(data)
                 avg_test_loss += self.__get_loss(logits, label)
+
+                repres_list.extend(representation.cpu().detach().numpy())
+                label_list.extend(label.cpu().detach().numpy())
 
                 pred_prob_all = F.softmax(logits, dim=1)  # 预测概率 [batch_size, class_num]
                 pred_prob_positive = pred_prob_all[:, 1]  # 注意，极其容易出错
@@ -364,4 +381,4 @@ class ModelManager():
                                                                       test_sample_num))
 
         self.avg_test_loss = avg_test_loss
-        return performance, avg_test_loss, ROC_data, PRC_data
+        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list

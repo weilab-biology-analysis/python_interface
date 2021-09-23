@@ -5,8 +5,7 @@ def get_config():
     parse = argparse.ArgumentParser(description='common train config')
 
     # 项目配置参数
-    # parse.add_argument('-learn-name', type=str, default='MIMML_Test', help='本次训练名称')
-    parse.add_argument('-learn-name', type=str, default='train', help='本次训练名称')
+    parse.add_argument('-learn-name', type=str, default='train02', help='本次训练名称')
     parse.add_argument('-path-save', type=str, default='../result/', help='保存字典的位置')
     parse.add_argument('-save-best', type=bool, default=True, help='当得到更好的准确度是否要保存')
     parse.add_argument('-threshold', type=float, default=0.60, help='准确率阈值')
