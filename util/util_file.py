@@ -1,3 +1,5 @@
+import zipfile
+
 def load_fasta(filename, skip_first=False):
     with open(filename, 'r') as file:
         content = file.read()
@@ -19,6 +21,9 @@ def load_fasta(filename, skip_first=False):
             test_dataset.append(content_split[index + 1])
     return train_dataset, train_label, test_dataset, test_label
 
+
+
+
 if __name__ == '__main__':
     filename = '../data/test.txt'
     with open(filename, 'r') as file:
@@ -31,7 +36,7 @@ if __name__ == '__main__':
 
     content_split = content.split('\n')
     # print(content_split)
-    train_dataset =[]
+    train_dataset = []
     train_label = []
     test_dataset = []
     test_label = []
@@ -41,10 +46,10 @@ if __name__ == '__main__':
         recordsplit = record.split('|')
         if recordsplit[-1] == 'training':
             train_label.append(int(recordsplit[-2]))
-            train_dataset.append(content_split[index+1])
+            train_dataset.append(content_split[index + 1])
         if recordsplit[-1] == 'testing':
             test_label.append(recordsplit[-2])
-            test_dataset.append(content_split[index+1])
+            test_dataset.append(content_split[index + 1])
     print(train_dataset)
     print(train_label)
     # import torch

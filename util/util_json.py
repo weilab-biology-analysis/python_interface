@@ -1,11 +1,12 @@
 import json
 
-def get_json(jobId, status):
+def get_json(jobId, status, result="None"):
     formdata = {
         "jobId": jobId,
         "status": status,
+        "result": result
     }
-    return json.dump(formdata)
+    return formdata
 
 if __name__ == '__main__':
     # some test

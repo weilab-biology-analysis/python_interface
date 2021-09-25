@@ -258,15 +258,15 @@ class ModelManager():
                                                                                             corrects,
                                                                                             the_batch_size))
                     self.visualizer.step_log_interval.append(step)
-                    self.visualizer.train_metric_record.append(train_acc)
-                    self.visualizer.train_loss_record.append(train_loss)
+                    self.visualizer.train_metric_record.append(train_acc.detach().numpy())
+                    self.visualizer.train_loss_record.append(train_loss.detach().numpy())
 
             '''Periodic Valid'''
             if epoch % self.config.interval_valid == 0:
                 valid_performance, avg_test_loss = self.__SL_test(valid_dataloader)
                 self.visualizer.step_test_interval.append(epoch)
-                self.visualizer.test_metric_record.append(valid_performance[0])
-                self.visualizer.test_loss_record.append(avg_test_loss)
+                self.visualizer.test_metric_record.append(valid_performance[0].detach().numpy())
+                self.visualizer.test_loss_record.append(avg_test_loss.detach().numpy())
                 valid_mcc = valid_performance[4]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
                 if valid_mcc > best_mcc:
                     best_mcc = valid_mcc
@@ -307,8 +307,13 @@ class ModelManager():
                                                                                             corrects,
                                                                                             the_batch_size))
                     self.visualizer.step_log_interval.append(step)
-                    self.visualizer.train_metric_record.append(train_acc)
-                    self.visualizer.train_loss_record.append(train_loss)
+
+                    if self.config.cuda:
+                        self.visualizer.train_metric_record.append(train_acc)
+                        self.visualizer.train_loss_record.append(train_loss)
+                    else:
+                        self.visualizer.train_metric_record.append(train_acc.detach().numpy())
+                        self.visualizer.train_loss_record.append(train_loss.detach().numpy())
 
             '''Periodic Test'''
             if epoch % self.config.interval_test == 0:

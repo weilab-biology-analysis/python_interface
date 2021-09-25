@@ -14,7 +14,7 @@ class IOManager():
         self.log = None
 
     def initialize(self):
-        self.result_path = '../result/' + self.config.learn_name + '/' + str(self.config.kmer) + "mer"
+        self.result_path = self.config.path_save + '/' + self.config.learn_name + '/' + str(self.config.kmer) + "mer"
         if not os.path.exists(self.result_path):
             os.makedirs(self.result_path)
         # 生成一份pkl的文件

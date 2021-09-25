@@ -30,6 +30,7 @@ class Visualizer():
 
     # 四张图Train Acc Curve、Train Loss Curve、Test Acc Curve、Test Loss Curve
     def draw_train_test_curve(self):
+        print(self.step_log_interval)
         sns.set(style="darkgrid")
         plt.figure(22, figsize=(16, 12))
         plt.subplots_adjust(wspace=0.2, hspace=0.3)

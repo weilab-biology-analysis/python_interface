@@ -5,11 +5,12 @@ def get_config():
     parse = argparse.ArgumentParser(description='common train config')
 
     # 项目配置参数
-    parse.add_argument('-learn-name', type=str, default='train02', help='本次训练名称')
+    parse.add_argument('-learn-name', type=str, default='train01', help='本次训练名称')
     parse.add_argument('-path-save', type=str, default='../result/', help='保存字典的位置')
     parse.add_argument('-save-best', type=bool, default=True, help='当得到更好的准确度是否要保存')
     parse.add_argument('-threshold', type=float, default=0.60, help='准确率阈值')
-    parse.add_argument('-cuda', type=bool, default=True)
+    # parse.add_argument('-cuda', type=bool, default=True)
+    parse.add_argument('-cuda', type=bool, default=False)
     parse.add_argument('-device', type=int, default=1)
     parse.add_argument('-seed', type=int, default=43)
     parse.add_argument('-num_workers', type=int, default=4)
@@ -21,7 +22,8 @@ def get_config():
     parse.add_argument('-path-params', type=str, default=None, help='模型参数路径')
     # parse.add_argument('-path-params', type=str, default='../result/SL_train_00/BERT, MCC[0.60].pt', help='模型参数路径')
     parse.add_argument('-model-save-name', type=str, default='BERT', help='保存模型的命名')
-    parse.add_argument('-save-figure-type', type=str, default='png', help='保存图片的文件类型')
+    parse.add_argument('-save-figure-type', type=str, default='jpeg', help='保存图片的文件类型')
+    # parse.add_argument('-save-figure-type', type=str, default='png', help='保存图片的文件类型')
 
     # 训练参数
     parse.add_argument('-mode', type=str, default='train-test', help='训练模式')

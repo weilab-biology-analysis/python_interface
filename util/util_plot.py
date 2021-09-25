@@ -39,5 +39,31 @@ def draw_ROC_PRC_curve(roc_datas, prc_datas, name, config):
     plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 16})
 
     plt.savefig(
-        '{}/{}/{}.{}'.format("../result" , config.learn_name , 'ROC_PRC', config.save_figure_type))
+        '{}/{}/{}.{}'.format(config.path_save , config.learn_name , 'ROC_PRC', config.save_figure_type))
+    # plt.show()
+
+def draw_statistics_bar(traindataset, testdataset, config):
+    totaldataset = []
+    totaldataset.extend(traindataset)
+    totaldataset.extend(testdataset)
+
+    plt.figure()
+
+    if config.model == 'DNAbert':
+        colors = ['#4DE199', '#F4E482', '#BAAD4E','#827919']
+        statstic = [0,0,0,0] # A, C, T, G
+        labels = ['A', 'C', 'T', 'G']
+        for seq in totaldataset:
+            for i in range(len(seq)):
+                if seq[i] == 'A':
+                    statstic[0] = statstic[0] + 1
+                elif seq[i] == 'C':
+                    statstic[1] = statstic[1] + 1
+                elif seq[i] == 'T':
+                    statstic[2] = statstic[2] + 1
+                elif seq[i] == 'G':
+                    statstic[3] = statstic[3] + 1
+        # print(statstic)
+        plt.bar(labels, statstic, color=colors)  # or `color=['r', 'g', 'b']`
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
     plt.show()

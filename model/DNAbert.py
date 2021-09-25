@@ -4,6 +4,12 @@ import numpy as np
 
 from transformers import BertForSequenceClassification, BertTokenizer, BertConfig, BertModel
 
+import sys
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 # model = BertModel.from_pretrained("bert-base-uncased")
@@ -12,6 +18,7 @@ from transformers import BertForSequenceClassification, BertTokenizer, BertConfi
 class BERT(nn.Module):
     def __init__(self, config):
         super(BERT,self).__init__()
+        self.config = config
 
         # 加载预训练模型参数
         self.kmer = config.kmer
@@ -52,8 +59,11 @@ class BERT(nn.Module):
         # print(token_seq)
         input_ids, token_type_ids, attention_mask = token_seq['input_ids'], token_seq['token_type_ids'], token_seq[
             'attention_mask']
+        if self.config.cuda:
+            representation = self.bert(input_ids.cuda(), token_type_ids.cuda(), attention_mask.cuda())["pooler_output"]
+        else:
+            representation = self.bert(input_ids, token_type_ids, attention_mask)["pooler_output"]
 
-        representation = self.bert(input_ids.cuda(), token_type_ids.cuda(), attention_mask.cuda())["pooler_output"]
         output = self.classification(representation)
 
         return output, representation
