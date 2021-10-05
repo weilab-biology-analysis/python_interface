@@ -59,7 +59,7 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
-    SL_train(config)
+    SL_train(config,[3])
 
 
 def server_use():
@@ -74,10 +74,11 @@ def server_use():
     config.path_data = setting["requestDataPath"]
     config.path_save = setting["resultDataPath"]
 
+    # ToDo 加模型参数
     if config.model == "DNAbert":
         kmerarray = [3, 4, 5, 6]
-    else:
-        kmerarray = [3]
+    elif config.model == "prot_bert_bfd" or config.model == "prot_bert":
+        kmerarray = [1]
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
@@ -90,22 +91,23 @@ def server_use():
         zip_file.write(resultdir, compress_type=zipfile.ZIP_DEFLATED)
         zip_file.close()
 
-        picturearry = []
-        picturearry.append(resultdir + "/statistics.jpeg")
-        picturearry.append(resultdir + "/ROC_PRC.jpeg")
+        pictureArray = []
+        pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/statistics.png")
+        pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/ROC_PRC.png")
         for kmer in kmerarray:
-            picturearry.append(resultdir + '/' + kmer + 'mer/t-sne.jpeg')
+            pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + '/' + str(kmer) + 'mer/t-sne.png')
 
         result = {
-            "zip": "http://server.wei-group.net" + resultdir + 'zipdir' + '.zip',
-            "picture": picturearry
+            "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
+            "pictures": pictureArray
         }
 
         postget = requests.post(requests_url, util_json.get_json(config.learn_name, 2, json.dumps(result)))
         print(postget.text)
     except Exception as e:
+        print(e)
         requests.post(requests_url, util_json.get_json(config.learn_name, -1))
-
+    # SL_train(config, kmerarray)
 
 if __name__ == '__main__':
     server_use()

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
-from model import DNAbert, Focal_Loss
+from model import DNAbert, Protbert, Focal_Loss
 from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_precision_score
 from copy import deepcopy
 
@@ -31,9 +31,12 @@ class ModelManager():
 
 
     def init_model(self):
+        # Todo
         if self.mode == 'train-test':
             if self.config.model == 'DNAbert':
                 self.model = DNAbert.BERT(self.config)
+            elif self.config.model == 'prot_bert_bfd' or self.config.model == 'prot_bert':
+                self.model = Protbert.BERT(self.config)
             else:
                 self.IOManager.log.Error('No Such Model')
             if self.config.cuda:
@@ -258,15 +261,15 @@ class ModelManager():
                                                                                             corrects,
                                                                                             the_batch_size))
                     self.visualizer.step_log_interval.append(step)
-                    self.visualizer.train_metric_record.append(train_acc.detach().numpy())
-                    self.visualizer.train_loss_record.append(train_loss.detach().numpy())
+                    self.visualizer.train_metric_record.append(train_acc)
+                    self.visualizer.train_loss_record.append(train_loss)
 
             '''Periodic Valid'''
             if epoch % self.config.interval_valid == 0:
                 valid_performance, avg_test_loss = self.__SL_test(valid_dataloader)
                 self.visualizer.step_test_interval.append(epoch)
-                self.visualizer.test_metric_record.append(valid_performance[0].detach().numpy())
-                self.visualizer.test_loss_record.append(avg_test_loss.detach().numpy())
+                self.visualizer.test_metric_record.append(valid_performance[0])
+                self.visualizer.test_loss_record.append(avg_test_loss)
                 valid_mcc = valid_performance[4]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
                 if valid_mcc > best_mcc:
                     best_mcc = valid_mcc
@@ -309,18 +312,18 @@ class ModelManager():
                     self.visualizer.step_log_interval.append(step)
 
                     if self.config.cuda:
-                        self.visualizer.train_metric_record.append(train_acc)
-                        self.visualizer.train_loss_record.append(train_loss)
+                        self.visualizer.train_metric_record.append(train_acc.cpu().detach().numpy())
+                        self.visualizer.train_loss_record.append(train_loss.cpu().detach().numpy())
                     else:
-                        self.visualizer.train_metric_record.append(train_acc.detach().numpy())
-                        self.visualizer.train_loss_record.append(train_loss.detach().numpy())
+                        self.visualizer.train_metric_record.append(train_acc.cpu().detach().numpy())
+                        self.visualizer.train_loss_record.append(train_loss.cpu().detach().numpy())
 
             '''Periodic Test'''
             if epoch % self.config.interval_test == 0:
                 test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list = self.__SL_test(test_dataloader)
                 self.visualizer.step_test_interval.append(epoch)
                 self.visualizer.test_metric_record.append(test_performance[0])
-                self.visualizer.test_loss_record.append(avg_test_loss)
+                self.visualizer.test_loss_record.append(avg_test_loss.cpu().detach().numpy())
                 self.test_performance.append(test_performance)
 
                 log_text = '\n' + '=' * 20 + ' Test Performance. Epoch[{}] '.format(epoch) + '=' * 20 \

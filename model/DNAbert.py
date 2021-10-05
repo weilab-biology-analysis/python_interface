@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
-from transformers import BertForSequenceClassification, BertTokenizer, BertConfig, BertModel
+from transformers import BertTokenizer, BertConfig, BertModel
 
 import sys
 import os
