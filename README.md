@@ -15,3 +15,5 @@ For example, if you want to use [DNAbert](https://github.com/jerryji1993/DNABERT
 ### 1.2 start train
 
 The entrance to the training model is in main folder, open it and you can easy know how to use it.
+
+## 2. function
