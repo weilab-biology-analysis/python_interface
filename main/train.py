@@ -3,6 +3,7 @@ import os
 import pickle
 import json
 import zipfile
+import torch
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -14,12 +15,13 @@ from frame import Learner
 from util import util_plot, util_json
 
 
-def SL_train(config, kmerarray):
+def SL_train(config, models):
+    torch.cuda.set_device(config.device)
     roc_datas, prc_datas = [], []
     name = []
 
-    for index, kmer in enumerate(kmerarray):
-        config.kmer = kmer
+    for index, model in enumerate(models):
+        config.model = model
         learner = Learner.Learner(config)
         learner.setIO()
         learner.setVisualization()
@@ -36,7 +38,7 @@ def SL_train(config, kmerarray):
 
         roc_datas.append(learner.visualizer.roc_data)
         prc_datas.append(learner.visualizer.prc_data)
-        name.append(str(kmer) + "mer")
+        name.append(str(model))
     util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
     # learner.test_model()
 
@@ -59,10 +61,11 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
-    SL_train(config,[3])
+    SL_train(config,["3mer_DNAbert"])
 
 
 def server_use():
+    DNA_model = ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]
     os.chdir("/root/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))
@@ -73,17 +76,24 @@ def server_use():
     config.learn_name = str(setting["jobId"])
     config.path_data = setting["requestDataPath"]
     config.path_save = setting["resultDataPath"]
+    config.type = setting["type"]
 
-    # ToDo 加模型参数
-    if config.model == "DNAbert":
-        kmerarray = [3, 4, 5, 6]
-    elif config.model == "prot_bert_bfd" or config.model == "prot_bert":
-        kmerarray = [1]
+    modelchoice = setting["modelchoice"]
+    models = []
+
+    # Todo
+    for choice in modelchoice:
+        if config.type == "DNA":
+            models.append(DNA_model[choice])
+        elif config.type == "RNA":
+            models.append(DNA_model[choice])
+        elif config.type == "prot":
+            models.append(DNA_model[choice])
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
     try:
-        SL_train(config, kmerarray)
+        SL_train(config, models)
 
         resultdir = '/data/result/' + config.learn_name
         zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
@@ -94,8 +104,8 @@ def server_use():
         pictureArray = []
         pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/statistics.png")
         pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/ROC_PRC.png")
-        for kmer in kmerarray:
-            pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + '/' + str(kmer) + 'mer/t-sne.png')
+        for model in models:
+            pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
 
         result = {
             "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
@@ -110,5 +120,5 @@ def server_use():
     # SL_train(config, kmerarray)
 
 if __name__ == '__main__':
-    server_use()
-    # gpu_test()
+    # server_use()
+    gpu_test()

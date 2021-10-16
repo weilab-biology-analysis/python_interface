@@ -33,7 +33,7 @@ class ModelManager():
     def init_model(self):
         # Todo
         if self.mode == 'train-test':
-            if self.config.model == 'DNAbert':
+            if self.config.model in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
                 self.model = DNAbert.BERT(self.config)
             elif self.config.model == 'prot_bert_bfd' or self.config.model == 'prot_bert':
                 self.model = Protbert.BERT(self.config)

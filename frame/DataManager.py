@@ -6,8 +6,6 @@ import torch.utils.data as Data
 import random
 import numpy as np
 from util import util_file
-from random import shuffle
-
 
 class DataManager():
     def __init__(self, learner):
@@ -18,25 +16,14 @@ class DataManager():
 
         self.mode = self.config.mode
 
-        if self.config.cuda:
-            self.device = torch.device('cuda')
-            torch.cuda.set_device(self.config.device)
-            # if self.config.seed:
-            #     torch.cuda.manual_seed(self.config.seed)
-        else:
-            self.device = torch.device('cpu')
-
         # label:
         self.train_label = None
-        self.valid_label = None
         self.test_label = None
         # raw_data: ['MNH', 'APD', ...]
         self.train_dataset = None
-        self.valid_dataset = None
         self.test_dataset = None
         # iterator
         self.train_dataloader = None
-        self.valid_dataloader = None
         self.test_dataloader = None
 
     def load_data(self):
@@ -70,8 +57,6 @@ class DataManager():
         return_data = None
         if name == 'train_set':
             return_data = self.train_dataloader
-        elif name == 'valid_set':
-            return_data = self.valid_dataloader
         elif name == 'test_set':
             return_data = self.test_dataloader
 

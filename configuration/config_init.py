@@ -28,9 +28,9 @@ def get_config():
 
     # 训练参数
     parse.add_argument('-mode', type=str, default='train-test', help='训练模式')
+    parse.add_argument('-type', type=str, default='DNA', help='分子名称')
     parse.add_argument('-model', type=str, default='DNAbert', help='预训练模型名称')
 
-    parse.add_argument('-backbone', type=str, default='Transformer Encoder', help='元学习骨架模型名称')
     # parse.add_argument('-if-MIM', type=bool, default=True)
     parse.add_argument('-if-MIM', type=bool, default=False)
     # parse.add_argument('-if-transductive', type=bool, default=True, help='inductive or transductive')
@@ -55,7 +55,7 @@ def get_config():
     # parse.add_argument('-max-len', type=int, default=207, help='max length of input sequences')
     # parse.add_argument('-num-layer', type=int, default=3, help='number of encoder blocks')
     # parse.add_argument('-num-head', type=int, default=8, help='number of head in multi-head attention')
-    # parse.add_argument('-dim-embedding', type=int, default=32, help='residue embedding dimension')
+    parse.add_argument('-dim-embedding', type=int, default=32, help='residue embedding dimension')
     # parse.add_argument('-dim-feedforward', type=int, default=32, help='hidden layer dimension in feedforward layer')
     # parse.add_argument('-dim-k', type=int, default=32, help='embedding dimension of vector k or q')
     # parse.add_argument('-dim-v', type=int, default=32, help='embedding dimension of vector v')
