@@ -20,14 +20,18 @@ class BERT(nn.Module):
         self.config = config
 
         # 加载预训练模型参数
-        self.kmer = config.kmer
-        if self.kmer == 3:
+        self.model = config.model
+        if self.model == "3mer_DNAbert":
+            self.kmer = 3
             self.pretrainpath = '../pretrain/DNAbert_3mer'
-        elif self.kmer == 4:
+        elif self.model == "4mer_DNAbert":
+            self.kmer = 4
             self.pretrainpath = '../pretrain/DNAbert_4mer'
-        elif self.kmer == 5:
+        elif self.model == "5mer_DNAbert":
+            self.kmer = 5
             self.pretrainpath = '../pretrain/DNAbert_5mer'
-        elif self.kmer == 6:
+        elif self.model == "6mer_DNAbert":
+            self.kmer = 6
             self.pretrainpath = '../pretrain/DNAbert_6mer'
 
         self.setting = BertConfig.from_pretrained(
