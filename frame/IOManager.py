@@ -13,6 +13,7 @@ class IOManager():
         self.result_path = None
         self.log = None
 
+
     def initialize(self):
         self.result_path = self.config.path_save + '/' + self.config.learn_name + '/' + str(self.config.kmer) + "mer"
         if not os.path.exists(self.result_path):

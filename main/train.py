@@ -61,12 +61,14 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
-    # SL_train(config,["Transformer_Encoder"])
-    SL_train(config,["LSTM"])
+    SL_train(config,["Transformer_Encoder"])
+    # SL_train(config, ["TextCNN"])
 
 
 def server_use():
-    DNA_model = ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]
+    DNA_model = ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert", "Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
+    RNA_model = ["Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
+    prot_model = ["prot_bert", "Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
     os.chdir("/root/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))
@@ -87,9 +89,9 @@ def server_use():
         if config.type == "DNA":
             models.append(DNA_model[choice])
         elif config.type == "RNA":
-            models.append(DNA_model[choice])
+            models.append(RNA_model[choice])
         elif config.type == "prot":
-            models.append(DNA_model[choice])
+            models.append(prot_model[choice])
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 

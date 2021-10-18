@@ -16,7 +16,7 @@ def get_attn_pad_mask(input_ids):
 
 class TransformerEncoder(nn.Module):
     def __init__(self, config):
-        super(TransformerEncoder).__init__()
+        super(TransformerEncoder, self).__init__()
         if config.type == "DNA" or config.type == "RNA":
             vocab_size = 6
         elif config.type == "prot":

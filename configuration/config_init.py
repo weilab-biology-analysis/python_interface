@@ -29,7 +29,7 @@ def get_config():
     # 训练参数
     parse.add_argument('-mode', type=str, default='train-test', help='训练模式')
     parse.add_argument('-type', type=str, default='DNA', help='分子名称')
-    parse.add_argument('-model', type=str, default='DNAbert', help='预训练模型名称')
+    parse.add_argument('-model', type=str, default='3mer_DNAbert', help='预训练模型名称')
 
     # parse.add_argument('-if-MIM', type=bool, default=True)
     parse.add_argument('-if-MIM', type=bool, default=False)
