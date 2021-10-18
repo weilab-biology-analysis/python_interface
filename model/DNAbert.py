@@ -51,7 +51,6 @@ class BERT(nn.Module):
         )
 
     def forward(self, seqs):
-        # print(seqs)
         seqs = list(seqs)
         kmer = [[seqs[i][x:x + self.kmer] for x in range(len(seqs[i]) + 1 - self.kmer)] for i in range(len(seqs))]
         # print(kmer)
