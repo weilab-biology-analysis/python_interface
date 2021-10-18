@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
-from model import DNAbert, Protbert, Focal_Loss, TextCNN, TransformerEncoder, LSTM
+from model import DNAbert, Protbert, Focal_Loss, TextCNN, TransformerEncoder, LSTM, DNN
 from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_precision_score
 from copy import deepcopy
 
@@ -43,6 +43,8 @@ class ModelManager():
                 self.model = TextCNN.TextCNN(self.config)
             elif self.config.model == "LSTM":
                 self.model = LSTM.LSTM(self.config)
+            elif self.config.model == "DNN":
+                self.model = DNN.DNN(self.config)
             else:
                 self.IOManager.log.Error('No Such Model')
             if self.config.cuda:
