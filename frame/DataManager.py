@@ -74,6 +74,8 @@ class DataManager():
             index_list.append(torch.tensor(seq_index))
             if len(seq) > max_len:
                 max_len = len(seq)
+        self.config.max_len = max_len
+        print(max_len)
         data = rnn_utils.pad_sequence(index_list, batch_first=True)
         dataset = MyDataSet(data, labels)
         data_loader = Data.DataLoader(dataset,
