@@ -2,6 +2,7 @@ import os
 import pickle
 import torch
 import torch.utils.data as Data
+import torch.nn.utils.rnn as rnn_utils
 
 import random
 import numpy as np
@@ -26,11 +27,29 @@ class DataManager():
         self.train_dataloader = None
         self.test_dataloader = None
 
+        self.token2index = None
+
     def load_data(self):
         self.train_dataset, self.train_label, self.test_dataset,self.test_label = util_file.load_fasta(self.config.path_data)
 
-        self.train_dataloader = self.construct_dataset(self.train_dataset,self.train_label, self.config.cuda, self.config.batch_size)
-        self.test_dataloader = self.construct_dataset(self.test_dataset,self.test_label, self.config.cuda, self.config.batch_size)
+        if self.config.mode in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
+            self.train_dataloader = self.construct_dataset(self.train_dataset, self.train_label, self.config.cuda,
+                                                           self.config.batch_size)
+            self.test_dataloader = self.construct_dataset(self.test_dataset, self.test_label, self.config.cuda,
+                                                          self.config.batch_size)
+        else:
+            if self.config.type == 'DNA':
+                self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
+            elif self.config.type == 'RNA':
+                self.token2index = pickle.load(open('../data/statistic/RNAtoken2index.pkl', 'rb'))
+            elif self.config.type == 'RNA':
+                self.token2index = pickle.load(open('../data/statistic/proteintoken2index.pkl', 'rb'))
+            self.train_dataloader = self.construct_dataset_with_same_len(self.train_dataset, self.train_label, self.config.cuda,
+                                                           self.config.batch_size)
+            self.test_dataloader = self.construct_dataset_with_same_len(self.test_dataset, self.test_label, self.config.cuda,
+                                                          self.config.batch_size)
+
+
 
         # set max length for model initialization
         # print('Final Max Length: {} (config.max_len: {}, data_max_len:{})'.format(
@@ -38,6 +57,29 @@ class DataManager():
         # if self.config.max_len < self.data_max_len:
         #     self.config.max_len = self.data_max_len
 
+    def construct_dataset_with_same_len(self, sequences, labels, cuda, batch_size):
+        # if cuda:
+        #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)
+        # else:
+        #     input_ids, labels = torch.LongTensor(sequences), torch.LongTensor(labels)
+        if cuda:
+            labels = torch.cuda.LongTensor(labels)
+        else:
+            labels = torch.LongTensor(labels)
+        index_list = []
+        max_len = 0
+        for seq in sequences:
+            seq_index = [self.token2index[token] for token in seq]
+            seq_index = [self.token2index['[CLS]']] + seq_index
+            index_list.append(torch.tensor(seq_index))
+            if len(seq) > max_len:
+                max_len = len(seq)
+        data = rnn_utils.pad_sequence(index_list, batch_first=True)
+        dataset = MyDataSet(data, labels)
+        data_loader = Data.DataLoader(dataset,
+                                      batch_size=batch_size,
+                                      shuffle=True)
+        return data_loader
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:
         #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)
