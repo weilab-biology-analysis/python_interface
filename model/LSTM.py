@@ -4,8 +4,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import numpy as np
 
-def count_len(seqs):
-    batch_len = len(seqs[0])
+def count_len(seqs, batch_len):
     lengths = []
     for seq in seqs:
         lengths.append(batch_len - np.bincount(seq.cpu())[0])
@@ -30,24 +29,26 @@ class LSTM(nn.Module):
 
     def forward(self, x):
         x = x.cuda()
-        max_len, lengths = count_len(x)
+        max_len, lengths = count_len(x, self.config.max_len)
 
         x = self.embedding(x)
-        print(self.config.max_len)
+        # print(self.config.max_len)
 
-        packed_input = pack_padded_sequence(input=x, batch_first=True, lengths=lengths)
-        representation, (h_n, c_n) = self.lstm(packed_input, None)
-        representation, lens = pad_packed_sequence(representation, batch_first=True)
+        packed_input = pack_padded_sequence(x, lengths, batch_first=True)
+        pack_representation, (h_n, c_n) = self.lstm(packed_input, None)
 
-        print(lengths)
-        # representationall = torch.cuda.LongTensor([])
+        # origin_representation, lens = pad_packed_sequence(pack_representation, batch_first=True)
+        #
+        # representation = torch.zeros(x.shape[0], self.hidden_dim).cuda()
         # for index, seq_index in enumerate(lengths):
-        #     representationall.append(representation[index, seq_index-1, :])
-        representationall = torch.index_select(representation)
-        output = self.classification(representationall)
-        print(output.shape)
+        #     representation[index] = origin_representation[index, seq_index-1, :]
+        # print(h_n.shape)
+        # print(representation.shape)
+        representation = h_n.squeeze(0)
+        output = self.classification(representation)
+        # print(output.shape)
 
-        return output, representationall
+        return output, representation
 
 if __name__ == '__main__':
     batch_size = 3
