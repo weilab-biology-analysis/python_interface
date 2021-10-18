@@ -61,7 +61,7 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
-    SL_train(config,["Transformer_Encoder"])
+    SL_train(config, ["DNN"])
     # SL_train(config, ["TextCNN"])
 
 

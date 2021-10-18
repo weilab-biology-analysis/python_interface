@@ -52,7 +52,7 @@ def get_config():
     parse.add_argument('-alpha', type=float, default=0.5, help='alpha in Focal Loss')
 
     # # 模型参数配置
-    # parse.add_argument('-max-len', type=int, default=207, help='max length of input sequences')
+    parse.add_argument('-max-len', type=int, default=207, help='max length of input sequences')
     # parse.add_argument('-num-layer', type=int, default=3, help='number of encoder blocks')
     # parse.add_argument('-num-head', type=int, default=8, help='number of head in multi-head attention')
     parse.add_argument('-dim-embedding', type=int, default=32, help='residue embedding dimension')
