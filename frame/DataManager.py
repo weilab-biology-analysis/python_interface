@@ -74,14 +74,15 @@ class DataManager():
             index_list.append(torch.tensor(seq_index))
             if len(seq) > max_len:
                 max_len = len(seq)
-        self.config.max_len = max_len
-        print(max_len)
+        self.config.max_len = max_len + 1
+        # print(max_len + 1)
         data = rnn_utils.pad_sequence(index_list, batch_first=True)
         dataset = MyDataSet(data, labels)
         data_loader = Data.DataLoader(dataset,
                                       batch_size=batch_size,
                                       shuffle=True)
         return data_loader
+
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:
         #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)

@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import collections
+import umap
+import torch
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 colors = ["#8D5CDC", "#EA52BC", "#FF6691", "#FF946B","#FFC859", "#F9F871"]
 
@@ -79,6 +83,23 @@ def draw_statistics_bar(traindataset, testdataset, config):
 
     plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
 
+    plt.show()
+
+def draw_umap(repres_list,label_list):
+    #配色、名称、坐标轴待统一样式修改
+    repres=np.array(repres_list)
+    label = np.array(label_list)
+    scaled_data = StandardScaler().fit_transform(repres)
+    reducer = umap.UMAP()
+    embedding = reducer.fit_transform(scaled_data)
+    # print(embedding)
+    plt.scatter(
+        embedding[:, 0],
+        embedding[:, 1],
+        c=label, cmap='summer', s=5
+    )
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.title('UMAP projection ', fontsize=24)
     plt.show()
 
 if __name__ == '__main__':

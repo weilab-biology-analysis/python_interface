@@ -295,6 +295,7 @@ class ModelManager():
         best_label_list = None
 
         for epoch in range(1, self.config.epoch + 1):
+            self.model.train()
             for batch in train_dataloader:
                 data, label = batch
                 # print(label)
