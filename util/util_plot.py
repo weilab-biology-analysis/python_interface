@@ -102,6 +102,55 @@ def draw_umap(repres_list,label_list):
     plt.title('UMAP projection ', fontsize=24)
     plt.show()
 
+
+def draw_negative_density(repres_list, label_list):
+    plt.figure(figsize=(30, 15))
+    fig, ax = plt.subplots()
+    # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
+    # sns.kdeplot(len_ls1[y_ls == 0], shade=True, alpha=.25, label='model B', color='#00CCCC')
+    sns.kdeplot(repres_list[label_list == 0], shade=True, alpha=.25, label='model C', color='#66CC00')
+    ax.vlines(0.25, 0, 0.8, colors='#999999', linestyles="dashed")
+    ax.vlines(0.75, 0, 1.2, colors='#999999', linestyles="dashed")
+    ax.tick_params(direction='out', labelsize=12)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.set_xlim(-0.25, 1.25)
+    ax.set_xticks([-0.25, 0.05, 0.35, 0.65, 0.95, 1.25])
+    ax.set_xticklabels(('0.0', '0.2', '0.4', '0.6', '0.8', '1.0'))
+    ax.set_ylim(0, 1.4)
+    plt.ylabel('Density (predicted negative samples)', fontsize=12)
+    plt.xlabel('Confidence', fontsize=12)
+
+    plt.legend(bbox_to_anchor=(0.1, 1.4), loc=2, borderaxespad=0, numpoints=1, fontsize=12, frameon=False)
+    fig.subplots_adjust(top=0.7, left=0.2)
+    plt.tight_layout()
+    plt.show()
+
+def draw_positive_density(repres_list, label_list):
+    plt.figure(figsize=(30, 15))
+    fig, ax = plt.subplots()
+    # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
+    # sns.kdeplot(len_ls1[y_ls == 0], shade=True, alpha=.25, label='model B', color='#00CCCC')
+    sns.kdeplot(repres_list[label_list == 1], shade=True, alpha=.25, label='model C', color='#66CC00')
+    ax.vlines(0.25, 0, 0.8, colors='#999999', linestyles="dashed")
+    ax.vlines(0.75, 0, 1.2, colors='#999999', linestyles="dashed")
+    ax.tick_params(direction='out', labelsize=12)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.set_xlim(-0.25, 1.25)
+    ax.set_xticks([-0.25, 0.05, 0.35, 0.65, 0.95, 1.25])
+    ax.set_xticklabels(('0.0', '0.2', '0.4', '0.6', '0.8', '1.0'))
+    ax.set_ylim(0, 1.4)
+    plt.ylabel('Density (predicted positive samples)', fontsize=12)
+    plt.xlabel('Confidence', fontsize=12)
+
+    plt.legend(bbox_to_anchor=(0.1, 1.4), loc=2, borderaxespad=0, numpoints=1, fontsize=12, frameon=False)
+    fig.subplots_adjust(top=0.7, left=0.2)
+    plt.tight_layout()
+    plt.show()
+
+
+
 if __name__ == '__main__':
     c = ['DLIPTSSKLVV','DLIPTSSKLVV','DLIPTSSKLVV','AETCZAO','ABCDEFGHIJKMN']
     colors = ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da', '#00df83', '#a4e312' ]
