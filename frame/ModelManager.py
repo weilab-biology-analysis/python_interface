@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
-from model import DNAbert, Protbert, Focal_Loss, TextCNN, TransformerEncoder, LSTM, DNN
+from model import DNAbert, Protbert, Focal_Loss, TextCNN, TransformerEncoder, LSTM, DNN, ReformerEncoder, LinformerEncoder, PerformerEncoder, SinkhornTransformerEncoder, CompressiveTransformerEncoder, RoutingTransformerEncoder
 from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_precision_score
 from copy import deepcopy
 
@@ -45,6 +45,16 @@ class ModelManager():
                 self.model = LSTM.LSTM(self.config)
             elif self.config.model == "DNN":
                 self.model = DNN.DNN(self.config)
+            elif self.config.model == "Reformer_Encoder":
+                self.model = ReformerEncoder.ReformerEncoder(self.config)
+            elif self.config.model == "Linformer_Encoder":
+                self.model = LinformerEncoder.LinformerEncoder(self.config)
+            elif self.config.model == "Performer_Encoder":
+                self.model = PerformerEncoder.PerformerEncoder(self.config)
+            elif self.config.model == "RoutingTransformer_Encoder":
+                self.model = RoutingTransformerEncoder.RoutingTransformerEncoder(self.config)
+            # elif self.config.model == "CompressiveTransformer_Encoder":
+            #     self.model = CompressiveTransformerEncoder.CompressiveTransformerEncoder(self.config)
             else:
                 self.IOManager.log.Error('No Such Model')
             if self.config.cuda:
