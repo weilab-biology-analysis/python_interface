@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
-from model import DNAbert, Protbert, Focal_Loss, TextCNN, TransformerEncoder, LSTM, DNN, ReformerEncoder, LinformerEncoder, PerformerEncoder, SinkhornTransformerEncoder, CompressiveTransformerEncoder, RoutingTransformerEncoder
+from model import DNAbert, Protbert, Focal_Loss, TextCNN, TextRCNN, LSTMwithAttention, VDCNN, TransformerEncoder, GRU, LSTM, BiLSTM, DNN, RNN, ReformerEncoder, LinformerEncoder, PerformerEncoder, RoutingTransformerEncoder, RNN_CNN
 from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_precision_score
 from copy import deepcopy
 
@@ -53,8 +53,20 @@ class ModelManager():
                 self.model = PerformerEncoder.PerformerEncoder(self.config)
             elif self.config.model == "RoutingTransformer_Encoder":
                 self.model = RoutingTransformerEncoder.RoutingTransformerEncoder(self.config)
-            # elif self.config.model == "CompressiveTransformer_Encoder":
-            #     self.model = CompressiveTransformerEncoder.CompressiveTransformerEncoder(self.config)
+            elif self.config.model == "VDCNN":
+                self.model = VDCNN.VDCNN(self.config)
+            elif self.config.model == "TextRCNN":
+                self.model = TextRCNN.TextRCNN(self.config)
+            elif self.config.model == "LSTMAttention":
+                self.model = LSTMwithAttention.LSTMAttention(self.config)
+            elif self.config.model == "BiLSTM":
+                self.model = BiLSTM.BiLSTM(self.config)
+            elif self.config.model == "RNN_CNN":
+                self.model = RNN_CNN.RNN_CNN(self.config)
+            elif self.config.model == "RNN":
+                self.model = RNN.RNN(self.config)
+            elif self.config.model == "GRU":
+                self.model = GRU.GRU(self.config)
             else:
                 self.IOManager.log.Error('No Such Model')
             if self.config.cuda:

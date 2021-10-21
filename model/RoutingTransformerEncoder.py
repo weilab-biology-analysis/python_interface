@@ -5,13 +5,6 @@
 # @IDE     : PyCharm
 # @FileName: RoutingTransformerEncoder.py
 
-# -*- coding: utf-8 -*-
-# @Time    : 2021/10/20 16:03
-# @Author  : WANG Ruheng
-# @Email   : blwangheng@163.com
-# @IDE     : PyCharm
-# @FileName: RoutingTransformer.py
-
 import torch
 import torch.nn as nn
 from routing_transformer import RoutingTransformerLM

@@ -12,7 +12,7 @@ def get_config():
     parse.add_argument('-threshold', type=float, default=0.60, help='准确率阈值')
     parse.add_argument('-cuda', type=bool, default=True)
     # parse.add_argument('-cuda', type=bool, default=False)
-    parse.add_argument('-device', type=int, default=1)
+    parse.add_argument('-device', type=int, default=3)
     parse.add_argument('-seed', type=int, default=43)
     parse.add_argument('-num_workers', type=int, default=4)
     parse.add_argument('-num_class', type=int, default=2)

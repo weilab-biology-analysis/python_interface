@@ -61,7 +61,9 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
-    SL_train(config, ["RoutingTransformer_Encoder"])
+    # SL_train(config, ["BiLSTM"])
+    # SL_train(config, ["RNN"])
+    SL_train(config, ["TextRCNN"])
 
 
 def server_use():
