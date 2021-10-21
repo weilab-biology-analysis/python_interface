@@ -8,6 +8,325 @@ from sklearn.preprocessing import StandardScaler
 
 colors = ["#8D5CDC", "#EA52BC", "#FF6691", "#FF946B","#FFC859", "#F9F871"]
 
+def draw_protein_residues_hist_image(train_data,test_data,config):
+    # train_data 和 test_data 要保证有sequences 和 labels成员属性
+    keyvalueP = {}
+    keyvalueF = {}
+    keyvalueP['A'] = 0
+    keyvalueP['R'] = 0
+    keyvalueP['N'] = 0
+    keyvalueP['D'] = 0
+    keyvalueP['C'] = 0
+    keyvalueP['Q'] = 0
+    keyvalueP['E'] = 0
+    keyvalueP['G'] = 0
+    keyvalueP['H'] = 0
+    keyvalueP['I'] = 0
+    keyvalueP['L'] = 0
+    keyvalueP['K'] = 0
+    keyvalueP['M'] = 0
+    keyvalueP['F'] = 0
+    keyvalueP['P'] = 0
+    keyvalueP['S'] = 0
+    keyvalueP['T'] = 0
+    keyvalueP['W'] = 0
+    keyvalueP['Y'] = 0
+    keyvalueP['V'] = 0
+
+    keyvalueF['A'] = 0
+    keyvalueF['R'] = 0
+    keyvalueF['N'] = 0
+    keyvalueF['D'] = 0
+    keyvalueF['C'] = 0
+    keyvalueF['Q'] = 0
+    keyvalueF['E'] = 0
+    keyvalueF['G'] = 0
+    keyvalueF['H'] = 0
+    keyvalueF['I'] = 0
+    keyvalueF['L'] = 0
+    keyvalueF['K'] = 0
+    keyvalueF['M'] = 0
+    keyvalueF['F'] = 0
+    keyvalueF['P'] = 0
+    keyvalueF['S'] = 0
+    keyvalueF['T'] = 0
+    keyvalueF['W'] = 0
+    keyvalueF['Y'] = 0
+    keyvalueF['V'] = 0
+
+    sequeces = train_data.sequences
+    labels = train_data.labels
+    for i in range(len(sequeces)):
+        seq = sequeces[i]
+        label = labels[i]
+        if (label == 1):  # 正例
+            for word in seq:
+                if word not in keyvalueP.keys():
+                    keyvalueP[word] = 1
+                else:
+                    keyvalueP[word] += 1
+        else:
+            for word in seq:
+                if word not in keyvalueF.keys():
+                    keyvalueF[word] = 1
+                else:
+                    keyvalueF[word] += 1
+    fig, ax = plt.subplots()
+    title = "The number of different protein residues(Train)"
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.title(title)
+    plt.xlabel("The types of protein residues", fontsize='x-large', fontweight='light')
+    plt.ylabel("The number of protein residues", fontsize='x-large', fontweight='light')
+    # 拿到数据
+    Px, Py, Nx, Ny = list(keyvalueP.keys()), list(keyvalueP.values()), \
+           list(keyvalueF.keys()), list(keyvalueF.values())
+    # 根据坐标画柱状图
+    ind = np.arange(20) + 20
+    width = 0.4
+    plt.bar(ind, Py, color='#b5cce4', edgecolor='#929195', width=width, alpha=1.0, label="Positive")
+    plt.bar(ind + width, Ny, color='#f9f8fd', edgecolor='#929195', width=width, alpha=0.50, label="Negative")
+    plt.legend(loc="upper left", )
+    plt.legend(frameon=False)
+    plt.xticks(np.arange(20) + 20 + 0.2, ('A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G',
+                                          'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
+                                          'T', 'W', 'Y', 'V'),
+               fontsize=11)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
+    keyvalueP['A'] = 0
+    keyvalueP['R'] = 0
+    keyvalueP['N'] = 0
+    keyvalueP['D'] = 0
+    keyvalueP['C'] = 0
+    keyvalueP['Q'] = 0
+    keyvalueP['E'] = 0
+    keyvalueP['G'] = 0
+    keyvalueP['H'] = 0
+    keyvalueP['I'] = 0
+    keyvalueP['L'] = 0
+    keyvalueP['K'] = 0
+    keyvalueP['M'] = 0
+    keyvalueP['F'] = 0
+    keyvalueP['P'] = 0
+    keyvalueP['S'] = 0
+    keyvalueP['T'] = 0
+    keyvalueP['W'] = 0
+    keyvalueP['Y'] = 0
+    keyvalueP['V'] = 0
+
+    keyvalueF['A'] = 0
+    keyvalueF['R'] = 0
+    keyvalueF['N'] = 0
+    keyvalueF['D'] = 0
+    keyvalueF['C'] = 0
+    keyvalueF['Q'] = 0
+    keyvalueF['E'] = 0
+    keyvalueF['G'] = 0
+    keyvalueF['H'] = 0
+    keyvalueF['I'] = 0
+    keyvalueF['L'] = 0
+    keyvalueF['K'] = 0
+    keyvalueF['M'] = 0
+    keyvalueF['F'] = 0
+    keyvalueF['P'] = 0
+    keyvalueF['S'] = 0
+    keyvalueF['T'] = 0
+    keyvalueF['W'] = 0
+    keyvalueF['Y'] = 0
+    keyvalueF['V'] = 0
+
+    sequeces = test_data.sequences
+    labels = test_data.labels
+    for i in range(len(sequeces)):
+        seq = sequeces[i]
+        label = labels[i]
+        if (label == 1):  # 正例
+            for word in seq:
+                if word not in keyvalueP.keys():
+                    keyvalueP[word] = 1
+                else:
+                    keyvalueP[word] += 1
+        else:
+            for word in seq:
+                if word not in keyvalueF.keys():
+                    keyvalueF[word] = 1
+                else:
+                    keyvalueF[word] += 1
+    fig, ax = plt.subplots()
+    title = "The number of different protein residues(Test)"
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.title(title)
+    plt.xlabel("The types of protein residues", fontsize='x-large', fontweight='light')
+    plt.ylabel("The number of protein residues", fontsize='x-large', fontweight='light')
+    # 拿到数据
+    Px, Py, Nx, Ny = list(keyvalueP.keys()), list(keyvalueP.values()), \
+                     list(keyvalueF.keys()), list(keyvalueF.values())
+    # 根据坐标画柱状图
+    ind = np.arange(20) + 20
+    width = 0.4
+    plt.bar(ind, Py, color='#b5cce4', edgecolor='#929195', width=width, alpha=1.0, label="Positive")
+    plt.bar(ind + width, Ny, color='#f9f8fd', edgecolor='#929195', width=width, alpha=0.50, label="Negative")
+    plt.legend(loc="upper left", )
+    plt.legend(frameon=False)
+    plt.xticks(np.arange(20) + 20 + 0.2, ('A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G',
+                                          'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
+                                          'T', 'W', 'Y', 'V'),
+               fontsize=11)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
+def draw_base_hist_image(train_data,test_data,config):
+    keyvalueP = {}
+    keyvalueF = {}
+    keyvalueP['A'] = 0
+    keyvalueP['T'] = 0
+    keyvalueP['C'] = 0
+    keyvalueP['G'] = 0
+
+    keyvalueF['A'] = 0
+    keyvalueF['T'] = 0
+    keyvalueF['C'] = 0
+    keyvalueF['G'] = 0
+
+    sequeces = train_data.sequences
+    labels = train_data.labels
+
+    for i in range(len(sequeces)):
+        seq = sequeces[i]
+        label = labels[i]
+
+        if(label == 1): # 正例
+            for word in seq:
+                if word not in keyvalueP.keys():
+                    keyvalueP[word] = 1
+                else :
+                    keyvalueP[word]+=1
+        else:
+            for word in seq:
+                if word not in keyvalueF.keys():
+                    keyvalueF[word] = 1
+                else :
+                    keyvalueF[word]+=1
+    fig, ax = plt.subplots()
+    title = "The number of different base(Train)"
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.title(title)
+    plt.xlabel("The types of base", fontsize='x-large', fontweight='light')
+    plt.ylabel("The number of base", fontsize='x-large', fontweight='light')
+    # 拿到数据
+    Px, Py, Nx, Ny = list(keyvalueP.keys()), list(keyvalueP.values()), \
+                     list(keyvalueF.keys()), list(keyvalueF.values())
+    # 根据坐标画柱状图
+    ind = np.arange(4) + 20
+    width = 0.4
+    plt.bar(ind, Py, color='#b5cce4', edgecolor='#929195', width=width, alpha=1.0, label="Positive")
+    plt.bar(ind + width, Ny, color='#f9f8fd', edgecolor='#929195', width=width, alpha=0.50, label="Negative")
+    plt.legend(loc="upper left", )
+    plt.legend(frameon=False)
+    plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
+               fontsize=11)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
+    keyvalueP = {}
+    keyvalueF = {}
+    keyvalueP['A'] = 0
+    keyvalueP['T'] = 0
+    keyvalueP['C'] = 0
+    keyvalueP['G'] = 0
+
+    keyvalueF['A'] = 0
+    keyvalueF['T'] = 0
+    keyvalueF['C'] = 0
+    keyvalueF['G'] = 0
+
+    sequeces = test_data.sequences
+    labels = test_data.labels
+
+    for i in range(len(sequeces)):
+        seq = sequeces[i]
+        label = labels[i]
+
+        if (label == 1):  # 正例
+            for word in seq:
+                if word not in keyvalueP.keys():
+                    keyvalueP[word] = 1
+                else:
+                    keyvalueP[word] += 1
+        else:
+            for word in seq:
+                if word not in keyvalueF.keys():
+                    keyvalueF[word] = 1
+                else:
+                    keyvalueF[word] += 1
+    fig, ax = plt.subplots()
+    title = "The number of different base(Test)"
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.title(title)
+    plt.xlabel("The types of base", fontsize='x-large', fontweight='light')
+    plt.ylabel("The number of base", fontsize='x-large', fontweight='light')
+    # 拿到数据
+    Px, Py, Nx, Ny = list(keyvalueP.keys()), list(keyvalueP.values()), \
+                     list(keyvalueF.keys()), list(keyvalueF.values())
+    # 根据坐标画柱状图
+    ind = np.arange(4) + 20
+    width = 0.4
+    plt.bar(ind, Py, color='#b5cce4', edgecolor='#929195', width=width, alpha=1.0, label="Positive")
+    plt.bar(ind + width, Ny, color='#f9f8fd', edgecolor='#929195', width=width, alpha=0.50, label="Negative")
+    plt.legend(loc="upper left", )
+    plt.legend(frameon=False)
+    plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
+               fontsize=11)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
+def draw_dna_rna_length_distribution_image(train_data,test_data,config):
+    # train_data 中是处理之后的训练集中的正负例样本长度集合
+    # test_data 中是处理之后的测试集中的正负例样本长度集合
+    # 或者在这个方法里用循环处理数据
+    data1 = train_data.positive_lengths
+    data2 = train_data.negative_lengths
+    xlabel = 'Length'
+    ylabel = 'Number'
+    fig, ax = plt.subplots()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.legend(loc="upper left", )
+    plt.title('The length of sequences(Train)')
+    plt.xlabel(xlabel, fontsize='x-large', fontweight='light')
+    plt.ylabel(ylabel, fontsize='x-large', fontweight='light')
+    plt.hist(data1, bins=10, edgecolor='black', alpha=1, color='#b5cce4', histtype='bar',
+             align='mid', orientation='vertical', rwidth=None, log=False, label='positive', stacked=False, )
+    plt.hist(data2, bins=10, edgecolor='black', alpha=0.50, color='#f9f8fd', histtype='bar',
+             align='mid', orientation='vertical', rwidth=None, log=False, label='negative', stacked=False, )
+    plt.legend(frameon=False)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
+    data1 = test_data.positive_lengths
+    data2 = test_data.negative_lengths
+    xlabel = 'Length'
+    ylabel = 'Number'
+    fig, ax = plt.subplots()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.legend(loc="upper left", )
+    plt.title('The length of sequences(Test)')
+    plt.xlabel(xlabel, fontsize='x-large', fontweight='light')
+    plt.ylabel(ylabel, fontsize='x-large', fontweight='light')
+    plt.hist(data1, bins=10, edgecolor='black', alpha=1, color='#b5cce4', histtype='bar',
+             align='mid', orientation='vertical', rwidth=None, log=False, label='positive', stacked=False, )
+    plt.hist(data2, bins=10, edgecolor='black', alpha=0.50, color='#f9f8fd', histtype='bar',
+             align='mid', orientation='vertical', rwidth=None, log=False, label='negative', stacked=False, )
+    plt.legend(frameon=False)
+    plt.savefig('{}/{}/{}.{}'.format(config.path_save, config.learn_name, 'statistics', config.save_figure_type))
+    plt.show()
+
 def draw_ROC_PRC_curve(roc_datas, prc_datas, name, config):
     # roc_data = [FPR, TPR, AUC]
     # prc_data = [recall, precision, AP]
