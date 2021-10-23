@@ -6,7 +6,7 @@ import torch.nn.utils.rnn as rnn_utils
 import random
 import numpy as np
 from util import util_file
-
+from util import util_transGraph
 def collate_fn(data):
     # print(data)
     data.sort(key=lambda data: len(data[0]), reverse=True)
@@ -48,6 +48,20 @@ class DataManager():
                                                            self.config.batch_size)
             self.test_dataloader = self.construct_dataset(self.test_dataset, self.test_label, self.config.cuda,
                                                           self.config.batch_size)
+        elif self.config.model in ['TextGCN', '']:
+            '''
+            the parts process GNN
+            '''
+            Graph = util_transGraph.CreateTextGCNGraph(self.config.path_data)
+            self.train_dataloader = Graph
+            # adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = Graph.load_corpus()
+            # t_support, num_supports = Graph.get_suppport(0)
+            # # t_features, t_y_train, t_y_val, t_y_test, t_train_mask, tm_train_mask = \
+            # #     Graph.post_process(adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size,
+            # #                        test_size)
+            # self.train_dataloader = Graph.post_process(adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size,
+            #                        test_size)
+
         else:
             if self.config.type == 'DNA':
                 self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
