@@ -4,8 +4,10 @@ import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 from model import DNAbert, Protbert, Focal_Loss, TextCNN, TextRCNN, LSTMwithAttention, VDCNN, TransformerEncoder, GRU, LSTM, BiLSTM, DNN, RNN, ReformerEncoder, LinformerEncoder, PerformerEncoder, RoutingTransformerEncoder, RNN_CNN
+from model import TextGCN
 from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_precision_score
 from copy import deepcopy
+from util import util_transGraph
 
 
 class ModelManager():
@@ -67,9 +69,16 @@ class ModelManager():
                 self.model = RNN.RNN(self.config)
             elif self.config.model == "GRU":
                 self.model = GRU.GRU(self.config)
+            elif self.config.model == "TextGCN":
+                Graph = self.dataManager.get_dataloder(name='train_set')
+                t_features, t_y_train, t_y_val, t_y_test, t_train_mask, tm_train_mask = Graph.get_titem()
+                t_support, num_supports = Graph.get_suppport(0)
+                self.model = TextGCN.GCN(t_features.shape[0], support=t_support)
             else:
                 self.IOManager.log.Error('No Such Model')
-            if self.config.cuda:
+            if self.config.model in ["TextGCN"]:
+                pass
+            elif self.config.cuda:
                 self.model.cuda()
         else:
             self.IOManager.log.Error('No Such Mode')
@@ -119,7 +128,10 @@ class ModelManager():
         if self.mode == 'train-test':
             train_dataloader = self.dataManager.get_dataloder(name='train_set')
             test_dataloader = self.dataManager.get_dataloder(name='test_set')
-            best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
+            if self.config.model in ['TextGCN']:
+                best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_GNN_train(train_dataloader)
+            else:
+                best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
             self.visualizer.roc_data = ROC
             self.visualizer.prc_data = PRC
             self.visualizer.repres_list = best_repres_list
@@ -187,7 +199,8 @@ class ModelManager():
             loss = self.loss_func(logits.view(-1, self.config.num_class), label.view(-1))
             loss = (loss.float()).mean()
             # flooding method
-            loss = (loss - self.config.b).abs() + self.config.b
+            loss = (loss - 0.02).abs() + 0.02
+            # loss = (loss - self.config.b).abs() + self.config.b
         elif self.config.loss_func == 'FL':
             # logits = logits.view(-1, 2)
             # label = label.view(-1)
@@ -423,3 +436,122 @@ class ModelManager():
 
         self.avg_test_loss = avg_test_loss
         return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list
+
+
+    def __SL_GNN_train(self, train_dataloader):
+        '''
+
+        Args:
+            path:  dataset file
+
+        Returns:
+
+        '''
+        best_mcc = 0
+        best_performance = None
+        best_ROC = None
+        best_PRC = None
+        best_repres_list = None
+        best_label_list = None
+        # Graph = util_transGraph.CreateTextGCNGraph(self.config.path_data)
+        # adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = Graph.load_corpus()
+        # t_features, t_y_train, t_y_val, t_y_test, t_train_mask, tm_train_mask = \
+        #     Graph.post_process(adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size,
+        #                        test_size)
+        Graph = train_dataloader
+        adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = Graph.get_item()
+        t_features, t_y_train, t_y_val, t_y_test, t_train_mask, tm_train_mask = Graph.get_titem()
+        t_support, num_supports = Graph.get_suppport(0)
+        # if torch.cuda.is_available():
+        #     t_features = t_features.cuda()
+        #     t_y_train = t_y_train.cuda()
+        #     t_y_val = t_y_val.cuda()
+        #     t_y_test = t_y_test.cuda()
+        #     t_train_mask = t_train_mask.cuda()
+        #     tm_train_mask = tm_train_mask.cuda()
+        # (t_feature, _, _, _, _, _) = self.dataManager.get_dataloder(name='train_set')
+        # self.model = TextGCN.GCN(t_features.shape[0], support=t_support, num_classes=2)
+        for epoch in range(self.config.epoch):
+            self.model.train()
+            logits,_ = self.model(t_features)
+            train_loss = self.__get_loss(logits * tm_train_mask, torch.max(t_y_train, 1)[1])
+            self.optimizer.zero_grad()
+            train_loss.backward()
+            self.optimizer.step()
+
+            if epoch % self.config.interval_test == 0:
+                # prob, test_loss, test_acc, pred, labels, test_duration = evaluate(t_features, t_y_test, test_mask)
+                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list = self.__SL_GNN_test(t_features, t_y_test, test_mask)
+
+                self.visualizer.step_test_interval.append(epoch)
+                self.visualizer.test_metric_record.append(test_performance[0])
+                self.visualizer.test_loss_record.append(avg_test_loss.cpu().detach().numpy())
+                self.test_performance.append(test_performance)
+
+                log_text = '\n' + '=' * 20 + ' Test Performance. Epoch[{}] '.format(epoch) + '=' * 20 \
+                           + '\n[ACC,\tSE,\t\tSP,\t\tAUC,\tMCC]\n' + '{:.4f},\t{:.4f},\t{:.4f},\t{:.4f},\t{:.4f}'.format(
+                    test_performance[0], test_performance[1], test_performance[2], test_performance[3],
+                    test_performance[4]) \
+                           + '\n' + '=' * 60
+                self.IOManager.log.Info(log_text)
+
+                test_mcc = test_performance[4]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
+                if test_mcc > best_mcc:
+                    best_mcc = test_mcc
+                    best_performance = test_performance
+                    best_ROC = ROC_data
+                    best_PRC = PRC_data
+                    best_repres_list = repres_list
+                    best_label_list = label_list
+                    if self.config.save_best:
+                        self.IOManager.save_model_dict(self.model.state_dict(), self.config.model_save_name,
+                                                       'MCC', best_mcc)
+        return best_performance, best_repres_list, best_label_list, best_ROC, best_PRC
+
+
+    def __SL_GNN_test(self, features, labels, mask):
+        corrects = 0
+        test_batch_num = 0
+        test_sample_num = 0
+        avg_test_loss = 0
+        pred_prob = []
+        label_pred = []
+        label_real = []
+
+        repres_list = []
+        label_list = []
+
+        self.model.eval()
+
+        with torch.no_grad():
+            logits, representation = self.model(features)
+            prob = torch.softmax(logits, dim=1)
+            repres_list.extend(representation.cpu().detach().numpy())
+            t_mask = torch.from_numpy(np.array(mask * 1., dtype=np.float32))
+            tm_mask = torch.transpose(torch.unsqueeze(t_mask, 0), 1, 0).repeat(1, labels.shape[1])
+            avg_test_loss = self.loss_func(logits * tm_mask, torch.max(labels, 1)[1])
+            label_list = label_list.extend(torch.max(labels, 1)[1])
+            label_pred = torch.max(logits, 1)[1]
+            all = int(torch.sum(t_mask).data)
+            len_mask= t_mask.shape[0]
+            pred_prob = prob[:,1][len_mask-all:]
+            label_pred = label_pred[len_mask-all:]
+            label_real = torch.max(labels, 1)[1][len_mask-all:]
+
+
+        # print(all)
+        # print(len_mask)
+        # print(prob[len_mask-all:])
+        # print('-------------------------------------------')
+        # print((label_pred == torch.max(labels, 1)[1]).float())
+        # print(t_mask)
+        # print('-------------------------------')
+        # print(((label_pred == torch.max(labels, 1)[1]).float()* t_mask))
+        # print('-------------------------------------')
+        # print(pred_prob)
+        # print(label_pred)
+        # print(label_real)
+        performance, ROC_data, PRC_data = self.__caculate_metric(pred_prob, label_pred, label_real)
+
+        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list
+

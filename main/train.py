@@ -63,7 +63,8 @@ def gpu_test():
     config = config_init.get_config()
     # SL_train(config, ["BiLSTM"])
     # SL_train(config, ["RNN"])
-    SL_train(config, ["TextRCNN"])
+    # SL_train(config, ["TextRCNN"])
+    SL_train(config, ["TextGCN"])
 
 
 def server_use():
