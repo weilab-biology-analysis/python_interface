@@ -7,17 +7,6 @@ import random
 import numpy as np
 from util import util_file
 from util import util_transGraph
-def collate_fn(data):
-    # print(data)
-    data.sort(key=lambda data: len(data[0]), reverse=True)
-    train_data = [tupledata[0] for tupledata in data]
-    label_data = [tupledata[1] for tupledata in data]
-    # data_length = [len(data) for data in train_data]
-    train_data = rnn_utils.pad_sequence(train_data, batch_first=True, padding_value=0)
-    # print(train_data)
-    # print(label_data)
-
-    return train_data, torch.cuda.LongTensor(label_data)
 
 class DataManager():
     def __init__(self, learner):
@@ -44,6 +33,7 @@ class DataManager():
         self.train_dataset, self.train_label, self.test_dataset,self.test_label = util_file.load_fasta(self.config.path_data)
 
         if self.config.model in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
+            # print("dna_bert_data_process")
             self.train_dataloader = self.construct_dataset(self.train_dataset, self.train_label, self.config.cuda,
                                                            self.config.batch_size)
             self.test_dataloader = self.construct_dataset(self.test_dataset, self.test_label, self.config.cuda,
@@ -52,6 +42,7 @@ class DataManager():
             '''
             the parts process GNN
             '''
+            print("graph_data_process")
             Graph = util_transGraph.CreateTextGCNGraph(self.config.path_data)
             self.train_dataloader = Graph
             # adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = Graph.load_corpus()
@@ -63,6 +54,7 @@ class DataManager():
             #                        test_size)
 
         else:
+            # print("token_data_process")
             if self.config.type == 'DNA':
                 self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
             elif self.config.type == 'RNA':
@@ -73,8 +65,6 @@ class DataManager():
                                                            self.config.batch_size)
             self.test_dataloader = self.construct_dataset_with_same_len(self.test_dataset, self.test_label, self.config.cuda,
                                                           self.config.batch_size)
-
-
 
         # set max length for model initialization
         # print('Final Max Length: {} (config.max_len: {}, data_max_len:{})'.format(
@@ -107,7 +97,7 @@ class DataManager():
         data_loader = Data.DataLoader(dataset,
                                       batch_size=batch_size,
                                       shuffle=True,
-                                      collate_fn=collate_fn)
+                                      collate_fn=self.collate_fn)
         return data_loader
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:
@@ -132,6 +122,18 @@ class DataManager():
             return_data = self.test_dataloader
 
         return return_data
+
+    def collate_fn(data):
+        # print(data)
+        data.sort(key=lambda data: len(data[0]), reverse=True)
+        train_data = [tupledata[0] for tupledata in data]
+        label_data = [tupledata[1] for tupledata in data]
+        # data_length = [len(data) for data in train_data]
+        train_data = rnn_utils.pad_sequence(train_data, batch_first=True, padding_value=0)
+        # print(train_data)
+        # print(label_data)
+
+        return train_data, torch.cuda.LongTensor(label_data)
 
 
 class MyDataSet(Data.Dataset):

@@ -39,7 +39,7 @@ class ModelManager():
                 self.model = DNAbert.BERT(self.config)
             elif self.config.model == 'prot_bert_bfd' or self.config.model == 'prot_bert':
                 self.model = Protbert.BERT(self.config)
-            elif self.config.model == "Transformer_Encoder":
+            elif self.config.model == "TransformerEncoder":
                 self.model = TransformerEncoder.TransformerEncoder(self.config)
             elif self.config.model == "TextCNN":
                 self.model = TextCNN.TextCNN(self.config)

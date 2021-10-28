@@ -18,7 +18,11 @@ from util import util_plot, util_json
 def SL_train(config, models):
     torch.cuda.set_device(config.device)
     roc_datas, prc_datas = [], []
-    name = []
+    repres_list, label_list = [], []
+    train_data,test_data = [], []
+    plot_config = { 'name':[],
+                    'length': len(models),
+                    'savepath': '/data/result/' + config.learn_name}
 
     for index, model in enumerate(models):
         config.model = model
@@ -33,14 +37,42 @@ def SL_train(config, models):
         learner.train_model()
 
         if index == 0:
-            print("statistics plot")
-            util_plot.draw_statistics_bar(learner.dataManager.train_dataset, learner.dataManager.test_dataset, config)
+            print("save traindata and testdata")
+            train_data = learner.dataManager.train_dataset
+            test_data = learner.dataManager.test_dataset
+            # util_plot.draw_statistics_bar(learner.dataManager.train_dataset, learner.dataManager.test_dataset, config)
 
+        # plot data prepare
         roc_datas.append(learner.visualizer.roc_data)
         prc_datas.append(learner.visualizer.prc_data)
-        name.append(str(model))
-    util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
+        repres_list.append(learner.visualizer.repres_list)
+        label_list.append(learner.visualizer.label_list)
+        plot_config['name'].append(str(model))
+
+    plot_data = {'train_data':train_data,
+             'test_data':test_data,
+             'repres_list':repres_list,
+             'label_list': label_list,
+             'roc_datas': roc_datas,
+             'prc_datas': prc_datas,
+             'config': plot_config
+             }
+    # print("plot_data_save")
+    # torch.save(state, './plot_data.pth')
+    # print("plot_data_complete")
+
+    # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
     # learner.test_model()
+
+    # return data
+
+def traditional_train(config):
+    if config.type == "DNA":
+        pass
+    elif config.type == "RNA":
+        pass
+    elif config.type == "prot":
+        pass
 
 
 def SL_fintune():
@@ -63,14 +95,15 @@ def gpu_test():
     config = config_init.get_config()
     # SL_train(config, ["BiLSTM"])
     # SL_train(config, ["RNN"])
+    SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
     # SL_train(config, ["TextRCNN"])
     SL_train(config, ["TextGCN"])
 
 
 def server_use():
-    DNA_model = ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert", "Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
-    RNA_model = ["Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
-    prot_model = ["prot_bert", "Transformer_Encoder", "TextCNN", "LSTM", "GCN"]
+    DNA_model = ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
+    RNA_model = ["TransformerEncoder", "TextCNN", "LSTM", "GCN"]
+    prot_model = ["prot_bert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
     os.chdir("/root/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))

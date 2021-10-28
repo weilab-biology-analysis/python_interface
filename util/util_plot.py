@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 colors = ["#8D5CDC", "#EA52BC", "#FF6691", "#FF946B","#FFC859", "#F9F871"]
 
-def draw_protein_residues_hist_image(train_data,test_data,config):
+def draw_protein_residues_hist_image(train_s,trainlabel,test_data,config):
     # train_data 和 test_data 要保证有sequences 和 labels成员属性
     keyvalueP = {}
     keyvalueF = {}
@@ -179,6 +179,7 @@ def draw_protein_residues_hist_image(train_data,test_data,config):
     plt.show()
 
 def draw_base_hist_image(train_data,test_data,config):
+
     keyvalueP = {}
     keyvalueF = {}
     keyvalueP['A'] = 0
@@ -421,7 +422,6 @@ def draw_umap(repres_list,label_list):
     plt.title('UMAP projection ', fontsize=24)
     plt.show()
 
-
 def draw_negative_density(repres_list, label_list):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
@@ -467,7 +467,6 @@ def draw_positive_density(repres_list, label_list):
     fig.subplots_adjust(top=0.7, left=0.2)
     plt.tight_layout()
     plt.show()
-
 
 
 if __name__ == '__main__':
