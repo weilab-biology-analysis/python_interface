@@ -14,6 +14,7 @@ import requests
 from configuration import config_init
 from frame import Learner
 from util import util_plot, util_json, util_file
+from traditional_desc import generate
 
 
 def SL_train(config, models):
@@ -82,9 +83,10 @@ def SL_train(config, models):
              'prc_datas': prc_datas,
              'config': plot_config
              }
+
     # drow(plot_data)
     # print("plot_data_save")
-    torch.save(plot_data, './plot_data3.pth')
+    # torch.save(plot_data, './plot_data.pth')
     # print("plot_data_complete")
 
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
@@ -93,12 +95,7 @@ def SL_train(config, models):
     # return data
 
 def traditional_train(config):
-    if config.type == "DNA":
-        pass
-    elif config.type == "RNA":
-        pass
-    elif config.type == "prot":
-        pass
+    generate.main([3], config)
 
 
 def SL_fintune():
@@ -125,7 +122,9 @@ def gpu_test():
     for i in range(1, len(str_list)-1):
         out_fa_file = out_fa_file + str_list[i] + "/"
     cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + input_fa_file + " -o " + out_fa_file + "new.fasta -c 0.8 -aS 0.8 -d 0"
-    # SL_train(config, ["BiLSTM"])
+
+    traditional_train(config)
+
     os.system(cmd)
     # print("aaaaaaaaaaa:", a)
     config.path_data = out_fa_file + "new.fasta"
