@@ -21,7 +21,6 @@ def load_fasta(filename, skip_first=False):
             test_dataset.append(content_split[index + 1])
     return train_dataset, train_label, test_dataset, test_label
 
-
 if __name__ == '__main__':
     filename = '../data/test.txt'
     with open(filename, 'r') as file:

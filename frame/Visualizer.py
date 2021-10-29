@@ -27,6 +27,7 @@ class Visualizer():
 
         self.repres_list = None
         self.label_list =None
+        self.logits_list=None
 
     # 四张图Train Acc Curve、Train Loss Curve、Test Acc Curve、Test Loss Curve
     def draw_train_test_curve(self):
