@@ -8,6 +8,18 @@ import numpy as np
 from util import util_file
 from util import util_transGraph
 
+def collate_fn(data):
+    # print(data)
+    data.sort(key=lambda data: len(data[0]), reverse=True)
+    train_data = [tupledata[0] for tupledata in data]
+    label_data = [tupledata[1] for tupledata in data]
+    # data_length = [len(data) for data in train_data]
+    train_data = rnn_utils.pad_sequence(train_data, batch_first=True, padding_value=0)
+    # print(train_data)
+    # print(label_data)
+
+    return train_data, torch.cuda.LongTensor(label_data)
+
 class DataManager():
     def __init__(self, learner):
         self.learner = learner
@@ -97,7 +109,8 @@ class DataManager():
         data_loader = Data.DataLoader(dataset,
                                       batch_size=batch_size,
                                       shuffle=True,
-                                      collate_fn=self.collate_fn)
+                                      # collate_fn=self.collate_fn
+                                      collate_fn=collate_fn)
         return data_loader
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:
@@ -123,17 +136,17 @@ class DataManager():
 
         return return_data
 
-    def collate_fn(data):
-        # print(data)
-        data.sort(key=lambda data: len(data[0]), reverse=True)
-        train_data = [tupledata[0] for tupledata in data]
-        label_data = [tupledata[1] for tupledata in data]
-        # data_length = [len(data) for data in train_data]
-        train_data = rnn_utils.pad_sequence(train_data, batch_first=True, padding_value=0)
-        # print(train_data)
-        # print(label_data)
-
-        return train_data, torch.cuda.LongTensor(label_data)
+    # def collate_fn(data):
+    #     # print(data)
+    #     data.sort(key=lambda data: len(data[0]), reverse=True)
+    #     train_data = [tupledata[0] for tupledata in data]
+    #     label_data = [tupledata[1] for tupledata in data]
+    #     # data_length = [len(data) for data in train_data]
+    #     train_data = rnn_utils.pad_sequence(train_data, batch_first=True, padding_value=0)
+    #     # print(train_data)
+    #     # print(label_data)
+    #
+    #     return train_data, torch.cuda.LongTensor(label_data)
 
 
 class MyDataSet(Data.Dataset):

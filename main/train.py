@@ -19,12 +19,19 @@ def SL_train(config, models):
     torch.cuda.set_device(config.device)
     roc_datas, prc_datas = [], []
     repres_list, label_list = [], []
-    train_data,test_data = [], []
-    plot_config = { 'name':[],
-                    'length': len(models),
-                    'savepath': '/data/result/' + config.learn_name}
+    train_seq,test_seq = [], []
+    train_label,test_label = [], []
+    logits_list = []
+    if_same = True
+    config.if_same = if_same
+    plot_config = { 'name': models,
+                    'model_number': len(models),
+                    'savepath': '/data/result/' + config.learn_name,
+                    'type': config.type,
+                    'if_same': config.if_same}
 
     for index, model in enumerate(models):
+        print(models)
         config.model = model
         learner = Learner.Learner(config)
         learner.setIO()
@@ -38,27 +45,35 @@ def SL_train(config, models):
 
         if index == 0:
             print("save traindata and testdata")
-            train_data = learner.dataManager.train_dataset
-            test_data = learner.dataManager.test_dataset
+            train_seq = learner.dataManager.train_dataset
+            test_seq = learner.dataManager.test_dataset
+            train_label = learner.dataManager.train_label
+            test_label = learner.dataManager.test_label
+            train_data = [train_seq, train_label]
+            test_data = [test_seq, test_label]
             # util_plot.draw_statistics_bar(learner.dataManager.train_dataset, learner.dataManager.test_dataset, config)
 
         # plot data prepare
         roc_datas.append(learner.visualizer.roc_data)
         prc_datas.append(learner.visualizer.prc_data)
         repres_list.append(learner.visualizer.repres_list)
+        logits_list.append(learner.visualizer.logits_list)
         label_list.append(learner.visualizer.label_list)
-        plot_config['name'].append(str(model))
+        # plot_config['name'].append(str(model))
 
     plot_data = {'train_data':train_data,
              'test_data':test_data,
              'repres_list':repres_list,
+             'logits_list':logits_list,
              'label_list': label_list,
              'roc_datas': roc_datas,
              'prc_datas': prc_datas,
              'config': plot_config
              }
+
+    # drow(plot_data)
     # print("plot_data_save")
-    # torch.save(state, './plot_data.pth')
+    # torch.save(plot_data, './plot_data.pth')
     # print("plot_data_complete")
 
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
@@ -93,11 +108,23 @@ def SL_fintune():
 
 def gpu_test():
     config = config_init.get_config()
+    input_fa_file = config.path_data
+    str_list = input_fa_file.split("/")
+    out_fa_file = "/"
+    for i in range(1, len(str_list)-1):
+        out_fa_file = out_fa_file + str_list[i] + "/"
+    cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + input_fa_file + " -o " + out_fa_file + "new.fasta -c 0.8 -aS 0.8 -d 0"
     # SL_train(config, ["BiLSTM"])
-    # SL_train(config, ["RNN"])
-    SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
+    os.system(cmd)
+    # print("aaaaaaaaaaa:", a)
+    config.path_data = out_fa_file + "new.fasta"
+    motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --format PNG -f " + config.path_data + " -o test4.png"
+    os.system(motif)
+    SL_train(config, ["VDCNN"])
     # SL_train(config, ["TextRCNN"])
-    SL_train(config, ["TextGCN"])
+    # SL_train(config, ["TextGCN"])
+    # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
+
 
 
 def server_use():

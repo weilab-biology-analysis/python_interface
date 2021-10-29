@@ -129,13 +129,14 @@ class ModelManager():
             train_dataloader = self.dataManager.get_dataloder(name='train_set')
             test_dataloader = self.dataManager.get_dataloder(name='test_set')
             if self.config.model in ['TextGCN']:
-                best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_GNN_train(train_dataloader)
+                best_performance, best_repres_list, best_logits_list, best_label_list, ROC, PRC = self.__SL_GNN_train(train_dataloader)
             else:
-                best_performance, best_repres_list, best_label_list, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
+                best_performance, best_repres_list, best_logits_list, best_label_list, ROC, PRC = self.__SL_train(train_dataloader, test_dataloader)
             self.visualizer.roc_data = ROC
             self.visualizer.prc_data = PRC
             self.visualizer.repres_list = best_repres_list
             self.visualizer.label_list = best_label_list
+            self.visualizer.logits_list = best_logits_list
 
             self.best_repres_list = best_repres_list
             self.best_label_list = best_label_list
@@ -330,6 +331,7 @@ class ModelManager():
         best_PRC = None
         best_repres_list = None
         best_label_list = None
+        best_logits_list = None
 
         for epoch in range(1, self.config.epoch + 1):
             self.model.train()
@@ -364,7 +366,7 @@ class ModelManager():
 
             '''Periodic Test'''
             if epoch % self.config.interval_test == 0:
-                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list = self.__SL_test(test_dataloader)
+                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, logits_list = self.__SL_test(test_dataloader)
                 self.visualizer.step_test_interval.append(epoch)
                 self.visualizer.test_metric_record.append(test_performance[0])
                 self.visualizer.test_loss_record.append(avg_test_loss.cpu().detach().numpy())
@@ -385,10 +387,11 @@ class ModelManager():
                     best_PRC = PRC_data
                     best_repres_list = repres_list
                     best_label_list = label_list
+                    best_logits_list = logits_list
                     if self.config.save_best :
                         self.IOManager.save_model_dict(self.model.state_dict(), self.config.model_save_name,
                                                        'MCC', best_mcc)
-        return best_performance, best_repres_list, best_label_list, best_ROC, best_PRC
+        return best_performance, best_repres_list, best_logits_list, best_label_list, best_ROC, best_PRC
 
     def __SL_test(self, dataloader):
         corrects = 0
@@ -401,6 +404,7 @@ class ModelManager():
 
         repres_list = []
         label_list = []
+        logits_list = []
 
         self.model.eval()
 
@@ -412,6 +416,7 @@ class ModelManager():
 
                 repres_list.extend(representation.cpu().detach().numpy())
                 label_list.extend(label.cpu().detach().numpy())
+                logits_list.extend(logits.cpu().detach().numpy())
 
                 pred_prob_all = F.softmax(logits, dim=1)  # 预测概率 [batch_size, class_num]
                 pred_prob_positive = pred_prob_all[:, 1]  # 注意，极其容易出错
@@ -435,7 +440,7 @@ class ModelManager():
                                                                       test_sample_num))
 
         self.avg_test_loss = avg_test_loss
-        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list
+        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, logits_list
 
 
     def __SL_GNN_train(self, train_dataloader):
@@ -453,6 +458,7 @@ class ModelManager():
         best_PRC = None
         best_repres_list = None
         best_label_list = None
+        best_logits_list = None
         # Graph = util_transGraph.CreateTextGCNGraph(self.config.path_data)
         # adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = Graph.load_corpus()
         # t_features, t_y_train, t_y_val, t_y_test, t_train_mask, tm_train_mask = \
@@ -481,7 +487,7 @@ class ModelManager():
 
             if epoch % self.config.interval_test == 0:
                 # prob, test_loss, test_acc, pred, labels, test_duration = evaluate(t_features, t_y_test, test_mask)
-                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list = self.__SL_GNN_test(t_features, t_y_test, test_mask)
+                test_performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, logits_list = self.__SL_GNN_test(t_features, t_y_test, test_mask)
 
                 self.visualizer.step_test_interval.append(epoch)
                 self.visualizer.test_metric_record.append(test_performance[0])
@@ -503,10 +509,11 @@ class ModelManager():
                     best_PRC = PRC_data
                     best_repres_list = repres_list
                     best_label_list = label_list
+                    best_logits_list = logits_list
                     if self.config.save_best:
                         self.IOManager.save_model_dict(self.model.state_dict(), self.config.model_save_name,
                                                        'MCC', best_mcc)
-        return best_performance, best_repres_list, best_label_list, best_ROC, best_PRC
+        return best_performance, best_repres_list, best_logits_list, best_label_list, best_ROC, best_PRC
 
 
     def __SL_GNN_test(self, features, labels, mask):
@@ -520,6 +527,7 @@ class ModelManager():
 
         repres_list = []
         label_list = []
+        logits_list = []
 
         self.model.eval()
 
@@ -527,6 +535,8 @@ class ModelManager():
             logits, representation = self.model(features)
             prob = torch.softmax(logits, dim=1)
             repres_list.extend(representation.cpu().detach().numpy())
+            logits_list.extend(logits.cpu().detach().numpy())
+
             t_mask = torch.from_numpy(np.array(mask * 1., dtype=np.float32))
             tm_mask = torch.transpose(torch.unsqueeze(t_mask, 0), 1, 0).repeat(1, labels.shape[1])
             avg_test_loss = self.loss_func(logits * tm_mask, torch.max(labels, 1)[1])
@@ -553,5 +563,5 @@ class ModelManager():
         # print(label_real)
         performance, ROC_data, PRC_data = self.__caculate_metric(pred_prob, label_pred, label_real)
 
-        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list
+        return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, logits_list
 
