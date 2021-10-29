@@ -22,7 +22,8 @@ def SL_train(config, models):
     repres_list, label_list = [], []
     train_seq,test_seq = [], []
     train_label,test_label = [], []
-    logits_list = []
+    pos_list = []
+    neg_list = []
     if_same = True
     config.if_same = if_same
     savepath = '../data/result/' + config.learn_name
@@ -66,14 +67,16 @@ def SL_train(config, models):
         roc_datas.append(learner.visualizer.roc_data)
         prc_datas.append(learner.visualizer.prc_data)
         repres_list.append(learner.visualizer.repres_list)
-        logits_list.append(learner.visualizer.logits_list)
+        pos_list.append(learner.visualizer.pos_list)
+        neg_list.append(learner.visualizer.neg_list)
         label_list.append(learner.visualizer.label_list)
         # plot_config['name'].append(str(model))
-    print("logits_list1: ", logits_list)
+    # print("logits_list1: ", logits_list)
     plot_data = {'train_data':train_data,
-             'test_data':test_data,
-             'repres_list':repres_list,
-             'logits_list':logits_list,
+             'test_data': test_data,
+             'repres_list': repres_list,
+             'pos_list': pos_list,
+             'neg_list': neg_list,
              'label_list': label_list,
              'roc_datas': roc_datas,
              'prc_datas': prc_datas,
@@ -81,7 +84,7 @@ def SL_train(config, models):
              }
     # drow(plot_data)
     # print("plot_data_save")
-    torch.save(plot_data, './plot_data1.pth')
+    torch.save(plot_data, './plot_data3.pth')
     # print("plot_data_complete")
 
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
