@@ -9,7 +9,6 @@ from sklearn.metrics import auc, roc_curve, precision_recall_curve, average_prec
 from copy import deepcopy
 from util import util_transGraph
 
-
 class ModelManager():
     def __init__(self, learner):
         self.learner = learner
@@ -30,7 +29,6 @@ class ModelManager():
         self.test_performance = []
         self.valid_performance = []
         self.avg_test_loss = 0
-
 
     def init_model(self):
         # Todo
@@ -403,6 +401,7 @@ class ModelManager():
         label_real = []
 
         repres_list = []
+        logits_list = []
         label_list = []
         logits_list = []
 
@@ -415,6 +414,7 @@ class ModelManager():
                 avg_test_loss += self.__get_loss(logits, label)
 
                 repres_list.extend(representation.cpu().detach().numpy())
+                logits_list.extend(logits.cpu().detach().numpy())
                 label_list.extend(label.cpu().detach().numpy())
                 logits_list.extend(logits.cpu().detach().numpy())
 
@@ -441,7 +441,6 @@ class ModelManager():
 
         self.avg_test_loss = avg_test_loss
         return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, logits_list
-
 
     def __SL_GNN_train(self, train_dataloader):
         '''
@@ -515,7 +514,6 @@ class ModelManager():
                                                        'MCC', best_mcc)
         return best_performance, best_repres_list, best_logits_list, best_label_list, best_ROC, best_PRC
 
-
     def __SL_GNN_test(self, features, labels, mask):
         corrects = 0
         test_batch_num = 0
@@ -526,6 +524,7 @@ class ModelManager():
         label_real = []
 
         repres_list = []
+        logits_list = []
         label_list = []
         logits_list = []
 
@@ -534,13 +533,14 @@ class ModelManager():
         with torch.no_grad():
             logits, representation = self.model(features)
             prob = torch.softmax(logits, dim=1)
+
             repres_list.extend(representation.cpu().detach().numpy())
             logits_list.extend(logits.cpu().detach().numpy())
 
             t_mask = torch.from_numpy(np.array(mask * 1., dtype=np.float32))
             tm_mask = torch.transpose(torch.unsqueeze(t_mask, 0), 1, 0).repeat(1, labels.shape[1])
             avg_test_loss = self.loss_func(logits * tm_mask, torch.max(labels, 1)[1])
-            label_list = label_list.extend(torch.max(labels, 1)[1])
+
             label_pred = torch.max(logits, 1)[1]
             all = int(torch.sum(t_mask).data)
             len_mask= t_mask.shape[0]

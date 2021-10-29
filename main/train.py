@@ -13,7 +13,7 @@ import requests
 from configuration import config_init
 from frame import Learner
 from util import util_plot, util_json
-
+from traditional_desc import generate
 
 def SL_train(config, models):
     torch.cuda.set_device(config.device)
@@ -61,6 +61,7 @@ def SL_train(config, models):
         label_list.append(learner.visualizer.label_list)
         # plot_config['name'].append(str(model))
 
+
     plot_data = {'train_data':train_data,
              'test_data':test_data,
              'repres_list':repres_list,
@@ -69,6 +70,7 @@ def SL_train(config, models):
              'roc_datas': roc_datas,
              'prc_datas': prc_datas,
              'config': plot_config
+
              }
 
     # drow(plot_data)
@@ -82,12 +84,7 @@ def SL_train(config, models):
     # return data
 
 def traditional_train(config):
-    if config.type == "DNA":
-        pass
-    elif config.type == "RNA":
-        pass
-    elif config.type == "prot":
-        pass
+    generate.main([3], config)
 
 
 def SL_fintune():
@@ -115,6 +112,13 @@ def gpu_test():
         out_fa_file = out_fa_file + str_list[i] + "/"
     cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + input_fa_file + " -o " + out_fa_file + "new.fasta -c 0.8 -aS 0.8 -d 0"
     # SL_train(config, ["BiLSTM"])
+
+    # SL_train(config, ["RNN"])
+    # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
+    # SL_train(config, ["TextRCNN"])
+    # SL_train(config, ["TextGCN"])
+    traditional_train(config)
+    
     os.system(cmd)
     # print("aaaaaaaaaaa:", a)
     config.path_data = out_fa_file + "new.fasta"
@@ -124,7 +128,6 @@ def gpu_test():
     # SL_train(config, ["TextRCNN"])
     # SL_train(config, ["TextGCN"])
     # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
-
 
 
 def server_use():

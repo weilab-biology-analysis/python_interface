@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 colors = ["#8D5CDC", "#EA52BC", "#FF6691", "#FF946B","#FFC859", "#F9F871"]
 
-def draw_protein_residues_hist_image(train_s,trainlabel,test_data,config):
+def draw_protein_residues_hist_image(train_data,trainlabel,test_data,config):
     # train_data 和 test_data 要保证有sequences 和 labels成员属性
     keyvalueP = {}
     keyvalueF = {}
@@ -422,12 +422,12 @@ def draw_umap(repres_list,label_list):
     plt.title('UMAP projection ', fontsize=24)
     plt.show()
 
-def draw_negative_density(repres_list, label_list):
+def draw_negative_density(logist_list, label_list):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
     # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
     # sns.kdeplot(len_ls1[y_ls == 0], shade=True, alpha=.25, label='model B', color='#00CCCC')
-    sns.kdeplot(repres_list[label_list == 0], shade=True, alpha=.25, label='model C', color='#66CC00')
+    sns.kdeplot(logist_list[label_list == 0], shade=True, alpha=.25, label='model C', color='#66CC00')
     ax.vlines(0.25, 0, 0.8, colors='#999999', linestyles="dashed")
     ax.vlines(0.75, 0, 1.2, colors='#999999', linestyles="dashed")
     ax.tick_params(direction='out', labelsize=12)
@@ -445,12 +445,12 @@ def draw_negative_density(repres_list, label_list):
     plt.tight_layout()
     plt.show()
 
-def draw_positive_density(repres_list, label_list):
+def draw_positive_density(logist_list, label_list):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
     # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
     # sns.kdeplot(len_ls1[y_ls == 0], shade=True, alpha=.25, label='model B', color='#00CCCC')
-    sns.kdeplot(repres_list[label_list == 1], shade=True, alpha=.25, label='model C', color='#66CC00')
+    sns.kdeplot(logist_list[label_list == 1], shade=True, alpha=.25, label='model C', color='#66CC00')
     ax.vlines(0.25, 0, 0.8, colors='#999999', linestyles="dashed")
     ax.vlines(0.75, 0, 1.2, colors='#999999', linestyles="dashed")
     ax.tick_params(direction='out', labelsize=12)
