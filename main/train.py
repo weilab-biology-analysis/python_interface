@@ -13,7 +13,7 @@ import requests
 from configuration import config_init
 from frame import Learner
 from util import util_plot, util_json
-
+from traditional_desc import generate
 
 def SL_train(config, models):
     torch.cuda.set_device(config.device)
@@ -49,6 +49,7 @@ def SL_train(config, models):
         label_list.append(learner.visualizer.label_list)
         plot_config['name'].append(str(model))
 
+
     plot_data = {'train_data':train_data,
              'test_data':test_data,
              'repres_list':repres_list,
@@ -56,6 +57,7 @@ def SL_train(config, models):
              'roc_datas': roc_datas,
              'prc_datas': prc_datas,
              'config': plot_config
+
              }
     # print("plot_data_save")
     # torch.save(state, './plot_data.pth')
@@ -67,12 +69,7 @@ def SL_train(config, models):
     # return data
 
 def traditional_train(config):
-    if config.type == "DNA":
-        pass
-    elif config.type == "RNA":
-        pass
-    elif config.type == "prot":
-        pass
+    generate.main([3], config)
 
 
 def SL_fintune():
@@ -95,10 +92,10 @@ def gpu_test():
     config = config_init.get_config()
     # SL_train(config, ["BiLSTM"])
     # SL_train(config, ["RNN"])
-    SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
+    # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
     # SL_train(config, ["TextRCNN"])
-    SL_train(config, ["TextGCN"])
-
+    # SL_train(config, ["TextGCN"])
+    traditional_train(config)
 
 def server_use():
     DNA_model = ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]

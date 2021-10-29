@@ -1,6 +1,6 @@
 import zipfile
 
-def load_fasta_onefile(filename, skip_first=False):
+def load_fasta(filename, skip_first=False):
     with open(filename, 'r') as file:
         content = file.read()
     content_split = content.split('\n')
@@ -9,26 +9,6 @@ def load_fasta_onefile(filename, skip_first=False):
     train_label = []
     test_dataset = []
     test_label = []
-    for index, record in enumerate(content_split):
-        if index % 2 == 1:
-            continue
-        recordsplit = record.split('|')
-        if recordsplit[-1] == 'training':
-            train_label.append(int(recordsplit[-2]))
-            train_dataset.append(content_split[index + 1])
-        if recordsplit[-1] == 'testing':
-            test_label.append(int(recordsplit[-2]))
-            test_dataset.append(content_split[index + 1])
-    return train_dataset, train_label, test_dataset, test_label
-
-def load_fasta(filename, skip_first=False):
-    with open(filename, 'r') as file:
-        content = file.read()
-    content_split = content.split('\n')
-
-    dataset = []
-    label = []
-
     for index, record in enumerate(content_split):
         if index % 2 == 1:
             continue
