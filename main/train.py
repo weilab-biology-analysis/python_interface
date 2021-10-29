@@ -9,10 +9,11 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
+
 import requests
 from configuration import config_init
 from frame import Learner
-from util import util_plot, util_json
+from util import util_plot, util_json, util_file
 
 
 def SL_train(config, models):
@@ -24,11 +25,19 @@ def SL_train(config, models):
     logits_list = []
     if_same = True
     config.if_same = if_same
+    savepath = '../data/result/' + config.learn_name
+    if not os.path.exists('../data/result/'):
+        os.mkdir('../data/result/')
+    if not os.path.exists(savepath):
+        os.mkdir(savepath)
+
+    util_file.filiter_fasta(config.path_data, savepath, skip_first=False)
     plot_config = { 'name': models,
                     'model_number': len(models),
-                    'savepath': '/data/result/' + config.learn_name,
+                    'savepath': savepath,
                     'type': config.type,
-                    'if_same': config.if_same}
+                    'if_same': config.if_same,
+                    'fasta_list': [savepath+'/train_positive.txt', savepath+'/train_negative.txt', savepath+'/test_positive.txt', savepath+'/test_negative.txt']}
 
     for index, model in enumerate(models):
         print(models)
@@ -60,7 +69,7 @@ def SL_train(config, models):
         logits_list.append(learner.visualizer.logits_list)
         label_list.append(learner.visualizer.label_list)
         # plot_config['name'].append(str(model))
-
+    print("logits_list1: ", logits_list)
     plot_data = {'train_data':train_data,
              'test_data':test_data,
              'repres_list':repres_list,
@@ -70,10 +79,9 @@ def SL_train(config, models):
              'prc_datas': prc_datas,
              'config': plot_config
              }
-
     # drow(plot_data)
     # print("plot_data_save")
-    # torch.save(plot_data, './plot_data.pth')
+    torch.save(plot_data, './plot_data1.pth')
     # print("plot_data_complete")
 
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)

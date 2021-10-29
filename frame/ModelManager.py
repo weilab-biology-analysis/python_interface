@@ -416,12 +416,13 @@ class ModelManager():
 
                 repres_list.extend(representation.cpu().detach().numpy())
                 label_list.extend(label.cpu().detach().numpy())
-                logits_list.extend(logits.cpu().detach().numpy())
 
                 pred_prob_all = F.softmax(logits, dim=1)  # 预测概率 [batch_size, class_num]
                 pred_prob_positive = pred_prob_all[:, 1]  # 注意，极其容易出错
                 pred_prob_sort = torch.max(pred_prob_all, 1)  # 每个样本中预测的最大的概率 [batch_size]
                 pred_class = pred_prob_sort[1]  # 每个样本中预测的最大的概率所在的位置（类别） [batch_size]
+
+                logits_list.extend(pred_prob_all.cpu().detach().numpy().tolist())
 
                 corrects += (pred_class == label).sum()
                 test_sample_num += len(label)
@@ -535,7 +536,7 @@ class ModelManager():
             logits, representation = self.model(features)
             prob = torch.softmax(logits, dim=1)
             repres_list.extend(representation.cpu().detach().numpy())
-            logits_list.extend(logits.cpu().detach().numpy())
+            logits_list.extend(prob.cpu().detach().numpy().tolist())
 
             t_mask = torch.from_numpy(np.array(mask * 1., dtype=np.float32))
             tm_mask = torch.transpose(torch.unsqueeze(t_mask, 0), 1, 0).repeat(1, labels.shape[1])
