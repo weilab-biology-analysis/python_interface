@@ -417,7 +417,7 @@ class ModelManager():
                 logits, representation = self.model(data)
                 avg_test_loss += self.__get_loss(logits, label)
 
-                repres_list.extend(representation.cpu().detach().numpy())
+                repres_list.extend(representation.cpu().detach().numpy().tolist())
                 logits_list.extend(logits.cpu().detach().numpy())
                 label_list.extend(label.cpu().detach().numpy())
 
@@ -547,7 +547,7 @@ class ModelManager():
             logits, representation = self.model(features)
             prob = torch.softmax(logits, dim=1)
 
-            repres_list.extend(representation.cpu().detach().numpy())
+            repres_list.extend(representation.cpu().detach().numpy().tolist())
             pred_prob_positive = prob[:, 1]  # 注意，极其容易出错
             pred_prob_negtive = prob[:, 0]
             pos_list.extend(pred_prob_positive.cpu().detach().numpy().tolist())
