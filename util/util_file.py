@@ -1,5 +1,50 @@
 import zipfile
+def filiter_fasta(filename, datapath, skip_first=False):
+    with open(filename, 'r') as file:
+        content = file.read()
+    content_split = content.split('\n')
 
+    train_positive = []
+    train_negative = []
+    test_positive = []
+    test_negative = []
+
+    for index, record in enumerate(content_split):
+        if index % 2 == 1:
+            continue
+        recordsplit = record.split('|')
+        if recordsplit[-1] == 'training':
+            if int(recordsplit[-2]) == 1:
+                train_positive.append(content_split[index + 1])
+            else:
+                train_negative.append(content_split[index + 1])
+        if recordsplit[-1] == 'testing':
+            if int(recordsplit[-2]) == 1:
+                test_positive.append(content_split[index + 1])
+            else:
+                test_negative.append(content_split[index + 1])
+    with open(datapath + '/train_positive.txt', 'w') as f:
+        for i in train_positive:
+            f.write('>\n')
+            f.write(i)
+            f.write('\n')
+    with open(datapath + '/train_negative.txt', 'w') as f:
+        for i in train_negative:
+            f.write('>\n')
+            f.write(i)
+            f.write('\n')
+    with open(datapath + '/test_positive.txt', 'w') as f:
+        for i in test_positive:
+            f.write('>\n')
+            f.write(i)
+            f.write('\n')
+    with open(datapath + '/test_negative.txt', 'w') as f:
+        for i in test_negative:
+            f.write('>\n')
+            f.write(i)
+            f.write('\n')
+
+    return None
 def load_fasta(filename, skip_first=False):
     with open(filename, 'r') as file:
         content = file.read()

@@ -12,23 +12,35 @@ sys.path.append(rootPath)
 import requests
 from configuration import config_init
 from frame import Learner
-from util import util_plot, util_json
+from util import util_plot, util_json, util_file
 from traditional_desc import generate
+
 
 def SL_train(config, models):
     torch.cuda.set_device(config.device)
     roc_datas, prc_datas = [], []
     repres_list, label_list = [], []
-    train_seq,test_seq = [], []
-    train_label,test_label = [], []
-    logits_list = []
+    train_seq, test_seq = [], []
+    train_label, test_label = [], []
+    pos_list = []
+    neg_list = []
     if_same = True
     config.if_same = if_same
-    plot_config = { 'name': models,
-                    'model_number': len(models),
-                    'savepath': '/data/result/' + config.learn_name,
-                    'type': config.type,
-                    'if_same': config.if_same}
+    savepath = '../data/result/' + config.learn_name
+    if not os.path.exists('../data/result/'):
+        os.mkdir('../data/result/')
+    if not os.path.exists(savepath):
+        os.mkdir(savepath)
+
+    util_file.filiter_fasta(config.path_data, savepath, skip_first=False)
+    plot_config = {'name': models,
+                   'model_number': len(models),
+                   'savepath': savepath,
+                   'type': config.type,
+                   'if_same': config.if_same,
+                   'fasta_list': [savepath + '/train_positive.txt', savepath + '/train_negative.txt',
+                                  savepath + '/test_positive.txt', savepath + '/test_negative.txt']}
+    tra_ROCdatas, tra_PRCdatas = generate.main([0, 1, 2], config)
 
     for index, model in enumerate(models):
         print(models)
@@ -57,22 +69,24 @@ def SL_train(config, models):
         roc_datas.append(learner.visualizer.roc_data)
         prc_datas.append(learner.visualizer.prc_data)
         repres_list.append(learner.visualizer.repres_list)
-        logits_list.append(learner.visualizer.logits_list)
+        pos_list.append(learner.visualizer.pos_list)
+        neg_list.append(learner.visualizer.neg_list)
         label_list.append(learner.visualizer.label_list)
         # plot_config['name'].append(str(model))
 
-
-    plot_data = {'train_data':train_data,
-             'test_data':test_data,
-             'repres_list':repres_list,
-             'logits_list':logits_list,
-             'label_list': label_list,
-             'roc_datas': roc_datas,
-             'prc_datas': prc_datas,
-             'config': plot_config
-
-             }
-
+    # print("logits_list1: ", logits_list)
+    plot_data = {'train_data': train_data,
+                 'test_data': test_data,
+                 'repres_list': repres_list,
+                 'pos_list': pos_list,
+                 'neg_list': neg_list,
+                 'label_list': label_list,
+                 'roc_datas': roc_datas,
+                 'prc_datas': prc_datas,
+                 'config': plot_config
+                 }
+    print('repres_list: ', repres_list)
+    print('label_list: ', label_list)
     # drow(plot_data)
     # print("plot_data_save")
     # torch.save(plot_data, './plot_data.pth')
@@ -82,9 +96,6 @@ def SL_train(config, models):
     # learner.test_model()
 
     # return data
-
-def traditional_train(config):
-    generate.main([3], config)
 
 
 def SL_fintune():
@@ -108,17 +119,10 @@ def gpu_test():
     input_fa_file = config.path_data
     str_list = input_fa_file.split("/")
     out_fa_file = "/"
-    for i in range(1, len(str_list)-1):
+    for i in range(1, len(str_list) - 1):
         out_fa_file = out_fa_file + str_list[i] + "/"
     cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + input_fa_file + " -o " + out_fa_file + "new.fasta -c 0.8 -aS 0.8 -d 0"
-    # SL_train(config, ["BiLSTM"])
 
-    # SL_train(config, ["RNN"])
-    # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
-    # SL_train(config, ["TextRCNN"])
-    # SL_train(config, ["TextGCN"])
-    traditional_train(config)
-    
     os.system(cmd)
     # print("aaaaaaaaaaa:", a)
     config.path_data = out_fa_file + "new.fasta"
@@ -131,9 +135,13 @@ def gpu_test():
 
 
 def server_use():
-    DNA_model = ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
-    RNA_model = ["TransformerEncoder", "TextCNN", "LSTM", "GCN"]
-    prot_model = ["prot_bert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
+    model = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
+             "TransformerEncoder", "Reformer_Encoder", "Performer_Encoder", "Linformer_Encoder",
+             "RoutingTransformer_Encoder", "6mer_DNAbert", "prot_bert", "TextGCN"]
+    para = ["CDHit", "Focalloss", "adversialtraining"]
+    # RNA_model = ["TransformerEncoder", "TextCNN", "LSTM", "GCN"]
+    # prot_model = ["prot_bert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
+
     os.chdir("/root/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))
@@ -144,19 +152,20 @@ def server_use():
     config.learn_name = str(setting["jobId"])
     config.path_data = setting["requestDataPath"]
     config.path_save = setting["resultDataPath"]
-    config.type = setting["type"]
 
+    config.mode = setting["mode"]
+    config.minimode = setting["mode"]
+    config.type = setting["type"]
     modelchoice = setting["modelchoice"]
+
+
     models = []
 
     # Todo
     for choice in modelchoice:
-        if config.type == "DNA":
-            models.append(DNA_model[choice])
-        elif config.type == "RNA":
-            models.append(RNA_model[choice])
-        elif config.type == "prot":
-            models.append(prot_model[choice])
+        models.append(model[choice])
+    for choice in modelchoice:
+        models.append(model[choice])
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
@@ -173,7 +182,8 @@ def server_use():
         pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/statistics.png")
         pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + "/ROC_PRC.png")
         for model in models:
-            pictureArray.append("http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
+            pictureArray.append(
+                "http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
 
         result = {
             "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
@@ -186,6 +196,7 @@ def server_use():
         print(e)
         requests.post(requests_url, util_json.get_json(config.learn_name, -1))
     # SL_train(config, kmerarray)
+
 
 if __name__ == '__main__':
     # server_use()
