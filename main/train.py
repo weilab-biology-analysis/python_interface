@@ -16,7 +16,7 @@ from util import util_plot, util_json, util_file
 from traditional_desc import generate
 
 
-def SL_train(config, models):
+def SL_train(config, modelsORpara):
     torch.cuda.set_device(config.device)
     roc_datas, prc_datas = [], []
     repres_list, label_list = [], []
@@ -26,29 +26,51 @@ def SL_train(config, models):
     neg_list = []
     if_same = True
     config.if_same = if_same
-    savepath = '../data/result/' + config.learn_name
-    if not os.path.exists('../data/result/'):
-        os.mkdir('../data/result/')
-    if not os.path.exists(savepath):
-        os.mkdir(savepath)
+    savepath = '/data/result/' + config.learn_name
+    # if not os.path.exists('../data/result/'):
+    #     os.mkdir('../data/result/')
+    # if not os.path.exists(savepath):
+    #     os.mkdir(savepath)
 
     util_file.filiter_fasta(config.path_data, savepath, skip_first=False)
-    plot_config = {'name': models,
-                   'model_number': len(models),
+
+    names = []
+    if config.minimode == 'paramCompare':
+        for i in modelsORpara:
+            names.append(config.model + '_' + config.para + '_' + i )
+
+    elif config.minimode == 'modelCompare':
+        names = modelsORpara
+        for index, name in enumerate(names):
+            if name in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
+                names[index] = 'DNAbert'
+
+    plot_config = {'names': names,
+                   'model_number': len(modelsORpara),
                    'savepath': savepath,
                    'type': config.type,
                    'if_same': config.if_same,
                    'fasta_list': [savepath + '/train_positive.txt', savepath + '/train_negative.txt',
                                   savepath + '/test_positive.txt', savepath + '/test_negative.txt']}
+
     tra_ROCdatas, tra_PRCdatas = generate.main([0, 1, 2], config)
 
-    for index, model in enumerate(models):
-        print(models)
-        config.model = model
+    for index, model in enumerate(modelsORpara):
+        # print(models)
+        if config.minimode == 'paramCompare':
+            if config.para == "CDHit":
+                outputpath = '/data/result'+ config.learn_name + '/' + "CDhit_" + str(modelsORpara[index]) + "_data.fasta"
+                cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + config.origin_path_data + " -o " + outputpath +" -c " + str(modelsORpara[index]) + " -aS 0.8 -d 0"
+                os.system(cmd)
+                config.path_data = outputpath
+
+        elif config.minimode == 'modelCompare':
+            config.model = model
+
         learner = Learner.Learner(config)
         learner.setIO()
         learner.setVisualization()
-        learner.load_data()
+        learner.SL_train_load_data()
         learner.init_model()
         # learner.load_params()
         learner.init_optimizer()
@@ -85,8 +107,7 @@ def SL_train(config, models):
                  'prc_datas': prc_datas,
                  'config': plot_config
                  }
-    print('repres_list: ', repres_list)
-    print('label_list: ', label_list)
+
     # drow(plot_data)
     # print("plot_data_save")
     # torch.save(plot_data, './plot_data.pth')
@@ -98,7 +119,7 @@ def SL_train(config, models):
     # return data
 
 
-def SL_fintune():
+def SL_test():
     # config = config_SL.get_config()
     config = pickle.load(open('../result/jobID/config.pkl', 'rb'))
     config.path_params = '../result/jobID/DNAbert, MCC[0.64].pt'
@@ -113,21 +134,21 @@ def SL_fintune():
     learner.train_model()
     learner.test_model()
 
-
 def gpu_test():
     config = config_init.get_config()
     input_fa_file = config.path_data
     str_list = input_fa_file.split("/")
     out_fa_file = "/"
     for i in range(1, len(str_list) - 1):
+        # out_fa_file =
         out_fa_file = out_fa_file + str_list[i] + "/"
     cmd = "/home/wrh/weilab_server/cdhit-4.6.2/cd-hit -i " + input_fa_file + " -o " + out_fa_file + "new.fasta -c 0.8 -aS 0.8 -d 0"
 
     os.system(cmd)
     # print("aaaaaaaaaaa:", a)
-    config.path_data = out_fa_file + "new.fasta"
-    motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --format PNG -f " + config.path_data + " -o test4.png"
-    os.system(motif)
+    # config.path_data = out_fa_file + "new.fasta"
+    # motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --format PNG -f " + config.path_data + " -o test4.png"
+    # os.system(motif)
     SL_train(config, ["VDCNN"])
     # SL_train(config, ["TextRCNN"])
     # SL_train(config, ["TextGCN"])
@@ -135,14 +156,18 @@ def gpu_test():
 
 
 def server_use():
-    model = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
+    model_all = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
              "TransformerEncoder", "Reformer_Encoder", "Performer_Encoder", "Linformer_Encoder",
              "RoutingTransformer_Encoder", "6mer_DNAbert", "prot_bert", "TextGCN"]
-    para = ["CDHit", "Focalloss", "adversialtraining"]
+    para_all = ["CDHit", "Focalloss", "adversialtraining"]
+    CDHit_all = [0.8, 0.6, 0.4]
+    # Focalloss_all = [0, 1]
+    # adversialtraining_all = [0,1]
+
     # RNA_model = ["TransformerEncoder", "TextCNN", "LSTM", "GCN"]
     # prot_model = ["prot_bert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
 
-    os.chdir("/root/biology_python/main")
+    os.chdir("/home/weilab/molecular_analysis_server/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))
     setting = json.loads(sys.argv[2])
@@ -150,22 +175,29 @@ def server_use():
 
     config = config_init.get_config()
     config.learn_name = str(setting["jobId"])
-    config.path_data = setting["requestDataPath"]
+    config.path_data = config.origin_path_data = setting["requestDataPath"]
     config.path_save = setting["resultDataPath"]
 
     config.mode = setting["mode"]
-    config.minimode = setting["mode"]
+    config.minimode = setting["minimode"]
     config.type = setting["type"]
-    modelchoice = setting["modelchoice"]
 
+    # a = '01234'
+    # list(a)
+    # Out[6]: ['0', '1', '2', '3', '4']
+    if config.minimode == 'paramCompare':
+        config.paramCompare = setting['paramCompare']
+        config.model = model_all[int(setting['paramCompareModel'])]
+        if config.paramCompare == "CDHit":
+            CDHitlist = list(setting['CDHit'])
+            models = [ i/10 for i in CDHitlist ]
 
-    models = []
+    elif config.minimode == 'modelCompare':
+        modelchoice = list(setting["modelCompare"])
+        models = []
 
-    # Todo
-    for choice in modelchoice:
-        models.append(model[choice])
-    for choice in modelchoice:
-        models.append(model[choice])
+        for choice in modelchoice:
+            models.append(model_all[int(choice)])
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
@@ -199,5 +231,5 @@ def server_use():
 
 
 if __name__ == '__main__':
-    # server_use()
-    gpu_test()
+    server_use()
+    # gpu_test()

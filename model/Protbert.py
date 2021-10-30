@@ -21,7 +21,6 @@ class BERT(nn.Module):
         self.config = config
 
         # 加载预训练模型参数
-        # ToDo 加模型参数
         self.model_name = config.model
         if self.model_name == 'prot_bert_bfd':
             self.pretrainpath = '../pretrain/prot_bert_bfd'

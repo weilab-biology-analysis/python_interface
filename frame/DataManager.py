@@ -41,7 +41,7 @@ class DataManager():
 
         self.token2index = None
 
-    def load_data(self):
+    def SL_train_load_data(self):
         self.train_dataset, self.train_label, self.test_dataset,self.test_label = util_file.load_fasta(self.config.path_data)
 
         if self.config.model in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
@@ -84,6 +84,24 @@ class DataManager():
         # if self.config.max_len < self.data_max_len:
         #     self.config.max_len = self.data_max_len
 
+    def SL_test_load_data(self):
+        pass
+
+    def construct_dataset(self, sequences, labels, cuda, batch_size):
+        # if cuda:
+        #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)
+        # else:
+        #     input_ids, labels = torch.LongTensor(sequences), torch.LongTensor(labels)
+        if cuda:
+            labels = torch.cuda.LongTensor(labels)
+        else:
+            labels = torch.LongTensor(labels)
+        dataset = MyDataSet(sequences, labels)
+        data_loader = Data.DataLoader(dataset,
+                                      batch_size=batch_size,
+                                      shuffle=True)
+        return data_loader
+
     def construct_dataset_with_same_len(self, sequences, labels, cuda, batch_size):
         # if cuda:
         #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)
@@ -109,22 +127,7 @@ class DataManager():
         data_loader = Data.DataLoader(dataset,
                                       batch_size=batch_size,
                                       shuffle=True,
-                                      # collate_fn=self.collate_fn
                                       collate_fn=collate_fn)
-        return data_loader
-    def construct_dataset(self, sequences, labels, cuda, batch_size):
-        # if cuda:
-        #     input_ids, labels = torch.cuda.LongTensor(sequences), torch.cuda.LongTensor(labels)
-        # else:
-        #     input_ids, labels = torch.LongTensor(sequences), torch.LongTensor(labels)
-        if cuda:
-            labels = torch.cuda.LongTensor(labels)
-        else:
-            labels = torch.LongTensor(labels)
-        dataset = MyDataSet(sequences, labels)
-        data_loader = Data.DataLoader(dataset,
-                                      batch_size=batch_size,
-                                      shuffle=True)
         return data_loader
 
     def get_dataloder(self, name):

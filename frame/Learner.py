@@ -22,8 +22,12 @@ class Learner():
         self.visualizer.initialize()
         self.IOManager.log.Info('Set Visualization Over.')
 
-    def load_data(self):
-        self.dataManager.load_data()
+    def SL_train_load_data(self):
+        self.dataManager.SL_train_load_data()
+        self.IOManager.log.Info('Load Data Over.')
+
+    def SL_test_load_data(self):
+        self.dataManager.SL_test_load_data()
         self.IOManager.log.Info('Load Data Over.')
 
     def init_model(self):
