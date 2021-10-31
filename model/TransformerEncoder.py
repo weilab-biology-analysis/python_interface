@@ -25,22 +25,29 @@ class TransformerEncoder(nn.Module):
         self.emb_dim = 128
 
         self.embedding = nn.Embedding(vocab_size, self.emb_dim, padding_idx=0)
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=128, nhead=8)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=self.emb_dim, nhead=8)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=8)
 
-        self.classification = nn.Linear(128, 2)
+        self.fnn = nn.Linear(self.emb_dim * config.max_len, self.emb_dim)
+
+        self.classifier = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(self.emb_dim, 2)
+        )
 
     def forward(self, x):
         x = x.cuda()
 
-        # padding_mask = get_attn_pad_mask(x).permute(1,0)
-        # print(x.shape)
-        x = self.embedding(x)
+        # padding_mask = get_attn_pad_mask(x).permute(1, 0)
         # src_key_padding_mask = padding_mask
-        representation = self.transformer_encoder(x,)[:, 0,:].squeeze(1)
+        x = self.embedding(x)
+        representation = self.transformer_encoder(x,)[:, 0, :].squeeze(1)
+        # representation = self.transformer_encoder(x, src_key_padding_mask=src_key_padding_mask)
+        representation = representation.view(representation.shape[0], -1)
+        representation = self.fnn(representation)
         # print(representation.shape)
         # print(representation)
-        output = self.classification(representation)
+        output = self.classifier(representation)
 
         return output, representation
 

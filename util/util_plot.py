@@ -3,7 +3,13 @@ import seaborn as sns
 import collections
 import umap
 import torch
+from time import time
+import pandas as pd
+import shap
+import xgboost
 import numpy as np
+from matplotlib.ticker import NullFormatter
+from sklearn import manifold, datasets
 from sklearn.preprocessing import StandardScaler
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import numpy as np
@@ -14,7 +20,7 @@ plt.rcParams['figure.dpi'] = 300  # 分辨率
 
 colors = ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da', '#00df83', '#a4e312' ]
 
-image_type={'all_need':['draw_umap','draw_ROC_PRC_curve','draw_negative_density','draw_positive_density','draw_tra_ROC_PRC_curve'],
+image_type={'all_need':['draw_umap', 'draw_shap', 'draw_ROC_PRC_curve','draw_negative_density','draw_positive_density','draw_tra_ROC_PRC_curve'],
             '1_in_3':{'prot':'draw_hist_image','DNA':'draw_dna_hist_image','RNA':'draw_rna_hist_image'},
             False:['draw_dna_rna_prot_length_distribution_image']}
 
@@ -605,6 +611,17 @@ def draw_umap(repres_list,label_list,config):
     # plt.title('UMAP projection ', fontsize=24)
     # plt.show()
 
+def draw_shap(repres_list, label_list, config):
+    # 这里需要计算一个dataframe 表格
+    # 这里假设 n * M 的n 是样本
+    repres_list = pd.DataFrame(repres_list)
+    print(repres_list.shape)
+    # repres_list.columns = [str(i) for i in range(len(repres_list[0]))]
+    model = xgboost.train({"learning_rate": 0.01}, xgboost.DMatrix(repres_list, label=label_list), 100)
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(repres_list)
+    shap.summary_plot(shap_values, repres_list, show=False)
+
 def draw_negative_density(repres_list, label_list,config):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
@@ -667,8 +684,10 @@ def construct_data(data):
           '1_in_3':[data['train_data'],data['test_data']],
           False:[data['train_data'],data['test_data']]}
     # for i in range()
-    draw_umap=[data['repres_list'],data['label_list']]
+    draw_umap=[data['repres_list'], data['label_list']]
     datas['all_need'].append(draw_umap)
+    draw_shap=[data['repres_list'], data['label_list']]
+    datas['all_need'].append(draw_shap)
     draw_ROC_PRC_curve = [data['roc_datas'], data['prc_datas']]
     datas['all_need'].append(draw_ROC_PRC_curve)
     neg=np.array(data['neg_list'])
@@ -699,11 +718,14 @@ def draw_plots(data,config):
         col = 3
 
     fig = plt.figure()
-    #umap拼图
+    #umap或者shap拼图
     if config['model_number']==1:
         # pass
         eval(image_type['all_need'][0])(data['all_need'][0][0][0], data['all_need'][0][1][0], config)
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'UMAP', 'png'))
+        plt.figure()
+        eval(image_type['all_need'][1])(data['all_need'][1][0][0], data['all_need'][1][1][0], config)
+        plt.savefig('{}/{}.{}'.format(config['savepath'], 'SHAP', 'png'))
         # plt.show()
 
     else:
@@ -720,9 +742,18 @@ def draw_plots(data,config):
             ax.text(0.1, 1.0, tag[i], transform=ax.transAxes + trans, fontweight='bold')
 
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'UMAP', 'png'))
+        plt.figure()
+        for i in range(config['model_number']):
+            # ax = fig.add_subplot(1, 3, i + 1)
+            ax = fig.add_subplot(config['model_number'] / col, col, i + 1)
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            eval(image_type['all_need'][1])(data['all_need'][1][0][i], data['all_need'][1][1][i], config)
+            ax.set_xlabel('SHAP value')
+        plt.savefig('{}/{}.{}'.format(config['savepath'], 'SHAP', 'png'))
         # plt.show()
     #其他都需要画的图
-    for img in range(1, len(image_type['all_need'])):
+    for img in range(2, len(image_type['all_need'])):
 
         eval(image_type['all_need'][img])(data['all_need'][img][0], data['all_need'][img][1], config)
 
@@ -745,6 +776,7 @@ if __name__ == '__main__':
 
 
     plot_data=torch.load('plot_data1.pth')
+    print(plot_data['config'])
     plot_data['config']['tra_name'] = ['a', 'b', 'c']
     # print(plot_data['config'])
     # print(plot_data['repres_list'])
