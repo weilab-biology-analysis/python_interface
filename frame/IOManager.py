@@ -15,7 +15,7 @@ class IOManager():
 
 
     def initialize(self):
-        self.result_path = self.config.path_save + '/' + self.config.learn_name + '/' + str(self.config.kmer) + "mer"
+        self.result_path = self.config.path_save + '/' + self.config.learn_name + '/' + str(self.config.model)
         if not os.path.exists(self.result_path):
             os.makedirs(self.result_path)
         # 生成一份pkl的文件

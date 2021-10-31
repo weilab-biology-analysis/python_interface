@@ -22,27 +22,24 @@ class TransformerEncoder(nn.Module):
         elif config.type == "prot":
             vocab_size = 26
 
-        self.emb_dim = 64
+        self.emb_dim = 128
 
         self.embedding = nn.Embedding(vocab_size, self.emb_dim, padding_idx=0)
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=64, nhead=8)
-        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=1)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=128, nhead=8)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=8)
 
-        self.classification = nn.Sequential(
-                                    nn.Linear(64, 32),
-                                    # nn.BatchNorm1d(256),
-                                    nn.LeakyReLU(),
-                                    # nn.Dropout(0.5),
-                                    nn.Linear(32, 2),
-                                    )
+        self.classification = nn.Linear(128, 2)
 
     def forward(self, x):
         x = x.cuda()
 
-        padding_mask = get_attn_pad_mask(x).permute(1,0)
+        # padding_mask = get_attn_pad_mask(x).permute(1,0)
+        # print(x.shape)
         x = self.embedding(x)
-        representation = self.transformer_encoder(x, src_key_padding_mask=padding_mask)[:, 0,:].squeeze(1)
-
+        # src_key_padding_mask = padding_mask
+        representation = self.transformer_encoder(x,)[:, 0,:].squeeze(1)
+        # print(representation.shape)
+        # print(representation)
         output = self.classification(representation)
 
         return output, representation

@@ -41,7 +41,7 @@ def get_config():
     parse.add_argument('-interval-valid', type=int, default=1, help='经过多少epoch对交叉验证集进行测试')
     parse.add_argument('-interval-test', type=int, default=1, help='经过多少epoch对测试集进行测试')
 
-    parse.add_argument('-epoch', type=int, default=20, help='迭代次数')
+    parse.add_argument('-epoch', type=int, default=10, help='迭代次数')
     parse.add_argument('-optimizer', type=str, default='Adam', help='优化器名称')
     # parse.add_argument('-optimizer', type=str, default='AdamW', help='优化器名称')
     parse.add_argument('-loss-func', type=str, default='CE', help='损失函数名称, CE/FL')

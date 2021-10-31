@@ -13,6 +13,7 @@ def main(featurechoice, config):
     ROCdatas = []
     PRCdatas = []
 
+    tra_name = []
     # Import some data to play with
     datapath = config.path_data
 
@@ -23,6 +24,7 @@ def main(featurechoice, config):
     if config.type == 'DNA' and 'RNA':
         for i in featurechoice:
             feature = nucleotide_feature[i]
+            tra_name.append(feature)
             if feature == 'ANF':
                 train_data = nu_extract.ANF(train_seq)
                 test_data = nu_extract.ANF(test_seq)
@@ -42,6 +44,7 @@ def main(featurechoice, config):
     elif config.type == 'protein':
         for i in featurechoice:
             feature = protein_feature[i]
+            tra_name.append(feature)
             if feature == 'BLOSUM62':
                 train_data = protein_extract.BLOSUM62(train_seq)
                 test_data = protein_extract.BLOSUM62(test_seq)
@@ -55,7 +58,7 @@ def main(featurechoice, config):
             ROCdatas.append(ROCdata)
             PRCdatas.append(PRCdata)
 
-    return ROCdatas, PRCdatas
+    return ROCdatas, PRCdatas, tra_name
 
 def gen(train_data, train_label, test_data, test_label):
 
@@ -80,4 +83,4 @@ def gen(train_data, train_label, test_data, test_label):
     precision, recall, thresholds = precision_recall_curve(test_label, test_predict_label, pos_label=1)
     AP = average_precision_score(test_label, test_predict_label, average='macro', pos_label=1, sample_weight=None)
 
-    return [fpr, tpr, roc_auc], [precision, recall, AP]
+    return [fpr, tpr, roc_auc], [recall, precision, AP]

@@ -379,7 +379,7 @@ class ModelManager():
                            + '\n' + '=' * 60
                 self.IOManager.log.Info(log_text)
 
-                test_mcc = test_performance[4]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
+                test_mcc = test_performance[0]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
                 if test_mcc > best_mcc:
                     best_mcc = test_mcc
                     best_performance = test_performance
@@ -509,8 +509,8 @@ class ModelManager():
                            + '\n' + '=' * 60
                 self.IOManager.log.Info(log_text)
 
-                test_mcc = test_performance[4]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
-                if test_mcc > best_mcc:
+                test_mcc = test_performance[0]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
+                if test_mcc >=  best_mcc:
                     best_mcc = test_mcc
                     best_performance = test_performance
                     best_ROC = ROC_data
@@ -529,15 +529,19 @@ class ModelManager():
         test_batch_num = 0
         test_sample_num = 0
         avg_test_loss = 0
+
         pred_prob = []
+
         label_pred = []
         label_real = []
+
         pred_prob_positive = []
         pred_prob_negtive = []
+
         repres_list = []
-        logits_list = []
         label_list = []
         logits_list = []
+
         pos_list = []
         neg_list = []
 
