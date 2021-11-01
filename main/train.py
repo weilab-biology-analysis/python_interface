@@ -31,12 +31,11 @@ def SL_train(config, modelsORpara):
 
     if_same = config.if_same
     if_same = True
-    config.if_same = if_same
-    savepath = '../data/result/' + config.learn_name
-    if not os.path.exists('../data/result/'):
-        os.mkdir('../data/result/')
-    if not os.path.exists(savepath):
-        os.mkdir(savepath)
+    savepath = '/data/result/' + config.learn_name
+    # if not os.path.exists('../data/result/'):
+    #     os.mkdir('../data/result/')
+    if not os.path.exists(savepath + '/plot'):
+        os.mkdir(savepath + '/plot')
 
     util_file.filiter_fasta(config.path_data, savepath, skip_first=False)
 
@@ -61,7 +60,7 @@ def SL_train(config, modelsORpara):
                    'if_same': config.if_same,
                    'fasta_list': [savepath + '/train_positive.txt', savepath + '/train_negative.txt',
                                   savepath + '/test_positive.txt', savepath + '/test_negative.txt']}
-    # tra_ROCdatas, tra_PRCdatas = generate.main([0, 1, 2], config)
+
 
     for index, model in enumerate(modelsORpara):
         # print(models)
@@ -123,6 +122,8 @@ def SL_train(config, modelsORpara):
                  'label_list': label_list,
                  'roc_datas': roc_datas,
                  'prc_datas': prc_datas,
+                 'tra_roc_datas': tra_ROCdatas,
+                 'tra_prc_datas': tra_PRCdatas,
                  'config': plot_config
                  }
 
@@ -179,7 +180,7 @@ def gpu_test():
     config.if_same = True
     # SL_train(config, ["LSTM", "TransformerEncoder"])
     # SL_train(config, ["TransformerEncoder"])
-    SL_train(config, ["TextCNN"])
+    SL_train(config, ["TextCNN", "LSTM", "TransformerEncoder"])
     # SL_train(config, ["TextGCN"])
     # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
 

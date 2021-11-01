@@ -20,16 +20,17 @@ import matplotlib.transforms as ts
 
 from util import util_data
 
-from scipy.interpolate import make_interp_spline
-
-# xnew = np.linspace(T.min(),T.max(),300) #300 represents number of points to make between T.min and T.max
-# power_smooth = spline(T,power,xnew)
-
 plt.rcParams['savefig.dpi'] = 300  # 图片像素
 plt.rcParams['figure.dpi'] = 300  # 分辨率
 
-colors = ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da',
+colours = {
+    2:['#81d4fa', '#ef9a9a'],
+    4:['#7AB4D0', '#7D9DD2', '#9683D6', '#B286D8'],
+    6:['#C86A63', '#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F','#7D9DD2'],
+    8:['#DE8787', '#DEB487', '#D4DE87', '#9FDE87', '#87DEBA', '#87B9DE', '#8C87DE', '#C587DE' ],
+    12:['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da',
           '#00df83', '#a4e312']
+}
 
 image_type={'all_need':['draw_umap', 'draw_shap', 'draw_ROC_PRC_curve','draw_negative_density','draw_positive_density','draw_tra_ROC_PRC_curve'],
             '1_in_3':{'prot':'draw_hist_image','DNA':'draw_dna_hist_image','RNA':'draw_rna_hist_image'},
