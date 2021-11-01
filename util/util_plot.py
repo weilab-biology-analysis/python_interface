@@ -1,24 +1,37 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 import collections
-import umap
-import torch
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-import numpy as np
-import matplotlib.transforms as ts
 import os
+
+import torch
+import seaborn as sns
+import umap
+
+from sklearn.preprocessing import StandardScaler
+
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+import matplotlib.transforms as ts
+
+from util import util_data
+
+from scipy.interpolate import make_interp_spline
+
+# xnew = np.linspace(T.min(),T.max(),300) #300 represents number of points to make between T.min and T.max
+# power_smooth = spline(T,power,xnew)
+
 plt.rcParams['savefig.dpi'] = 300  # 图片像素
 plt.rcParams['figure.dpi'] = 300  # 分辨率
 
-colors = ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da', '#00df83', '#a4e312' ]
+colors = ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da',
+          '#00df83', '#a4e312']
 
-image_type={'all_need':['draw_umap','draw_ROC_PRC_curve','draw_negative_density','draw_positive_density','draw_tra_ROC_PRC_curve'],
-            '1_in_3':{'prot':'draw_hist_image','DNA':'draw_dna_hist_image','RNA':'draw_rna_hist_image'},
-            False:['draw_dna_rna_prot_length_distribution_image']}
+image_type = {'all_need': ['draw_umap', 'draw_ROC_PRC_curve', 'draw_negative_density', 'draw_positive_density',
+                           'draw_tra_ROC_PRC_curve'],
+              '1_in_3': {'prot': 'draw_hist_image', 'DNA': 'draw_dna_hist_image', 'RNA': 'draw_rna_hist_image'},
+              False: ['draw_dna_rna_prot_length_distribution_image']}
 
-def draw_hist_image(train_data,test_data,config):
+
+def draw_hist_image(train_data, test_data, config):
     # train_data 和 test_data 要保证有sequences 和 labels成员属性
     keyvalueP = {}
     keyvalueF = {}
@@ -90,7 +103,7 @@ def draw_hist_image(train_data,test_data,config):
     plt.ylabel("The number of protein residues", fontsize='x-large', fontweight='light')
     # 拿到数据
     Px, Py, Nx, Ny = list(keyvalueP.keys()), list(keyvalueP.values()), \
-           list(keyvalueF.keys()), list(keyvalueF.values())
+                     list(keyvalueF.keys()), list(keyvalueF.values())
     # 根据坐标画柱状图
     ind = np.arange(20) + 20
     width = 0.4
@@ -185,10 +198,11 @@ def draw_hist_image(train_data,test_data,config):
                                           'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
                                           'T', 'W', 'Y', 'V'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'],config['names']+ 'prot_test_statistics','jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], config['names'] + 'prot_test_statistics', 'jpg'))
     # plt.show()
 
-def draw_dna_hist_image(train_data,test_data,config):
+
+def draw_dna_hist_image(train_data, test_data, config):
     keyvalueP = {}
     keyvalueF = {}
     keyvalueP['A'] = 0
@@ -208,18 +222,18 @@ def draw_dna_hist_image(train_data,test_data,config):
         seq = sequeces[i]
         label = labels[i]
 
-        if(label == 1): # 正例
+        if (label == 1):  # 正例
             for word in seq:
                 if word not in keyvalueP.keys():
                     keyvalueP[word] = 1
-                else :
-                    keyvalueP[word]+=1
+                else:
+                    keyvalueP[word] += 1
         else:
             for word in seq:
                 if word not in keyvalueF.keys():
                     keyvalueF[word] = 1
-                else :
-                    keyvalueF[word]+=1
+                else:
+                    keyvalueF[word] += 1
     fig, ax = plt.subplots()
     title = "The number of different base(Train)"
     ax.spines['right'].set_visible(False)
@@ -239,7 +253,7 @@ def draw_dna_hist_image(train_data,test_data,config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'],  'dna_train_statistics','jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_train_statistics', 'jpg'))
     # plt.show()
 
     keyvalueP = {}
@@ -292,10 +306,11 @@ def draw_dna_hist_image(train_data,test_data,config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'],  'dna_test_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_test_statistics', 'jpg'))
     # plt.show()
 
-def draw_rna_hist_image(train_data,test_data,config):
+
+def draw_rna_hist_image(train_data, test_data, config):
     keyvalueP = {}
     keyvalueF = {}
     keyvalueP['A'] = 0
@@ -315,18 +330,18 @@ def draw_rna_hist_image(train_data,test_data,config):
         seq = sequeces[i]
         label = labels[i]
 
-        if(label == 1): # 正例
+        if (label == 1):  # 正例
             for word in seq:
                 if word not in keyvalueP.keys():
                     keyvalueP[word] = 1
-                else :
-                    keyvalueP[word]+=1
+                else:
+                    keyvalueP[word] += 1
         else:
             for word in seq:
                 if word not in keyvalueF.keys():
                     keyvalueF[word] = 1
-                else :
-                    keyvalueF[word]+=1
+                else:
+                    keyvalueF[word] += 1
     fig, ax = plt.subplots()
     title = "The number of different base(Train)"
     ax.spines['right'].set_visible(False)
@@ -346,7 +361,7 @@ def draw_rna_hist_image(train_data,test_data,config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'U', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'rna_train_statistics','jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'rna_train_statistics', 'jpg'))
     # plt.show()
 
     keyvalueP = {}
@@ -402,13 +417,14 @@ def draw_rna_hist_image(train_data,test_data,config):
     plt.savefig('{}/{}.{}'.format(config['savepath'], config.learn_name, 'rna_test_statistics', 'jpg'))
     # plt.show()
 
-def draw_dna_rna_prot_length_distribution_image(train_data,test_data,config):
+
+def draw_dna_rna_prot_length_distribution_image(train_data, test_data, config):
     # train_data 中是处理之后的训练集中的正负例样本长度集合
     # test_data 中是处理之后的测试集中的正负例样本长度集合
     # 或者在这个方法里用循环处理数据
     # train_data 列表 01
-    train_positive_lengths=[]
-    train_negative_lengths=[]
+    train_positive_lengths = []
+    train_negative_lengths = []
     test_positive_lengths = []
     test_negative_lengths = []
     train_sequences = train_data[0]
@@ -428,7 +444,7 @@ def draw_dna_rna_prot_length_distribution_image(train_data,test_data,config):
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     plt.legend(loc="upper left", )
-    plt.title('The length of '+ config['type'] +'\'s sequences(Train)')
+    plt.title('The length of ' + config['type'] + '\'s sequences(Train)')
     plt.xlabel(xlabel, fontsize='x-large', fontweight='light')
     plt.ylabel(ylabel, fontsize='x-large', fontweight='light')
     plt.hist(data1, bins=10, edgecolor='black', alpha=1, color='#b5cce4', histtype='bar',
@@ -436,7 +452,7 @@ def draw_dna_rna_prot_length_distribution_image(train_data,test_data,config):
     plt.hist(data2, bins=10, edgecolor='black', alpha=0.50, color='#f9f8fd', histtype='bar',
              align='mid', orientation='vertical', rwidth=None, log=False, label='negative', stacked=False, )
     plt.legend(frameon=False)
-    plt.savefig('{}/{}.{}'.format(config.path_save,  config['type']+'statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config.path_save, config['type'] + 'statistics', 'jpg'))
     # plt.show()
 
     for i in range(len(test_labels)):
@@ -453,7 +469,7 @@ def draw_dna_rna_prot_length_distribution_image(train_data,test_data,config):
     ax.spines['top'].set_visible(False)
     plt.legend(loc="upper left", )
 
-    plt.title('The length of'+config['type']+'\'s sequences(Test)')
+    plt.title('The length of' + config['type'] + '\'s sequences(Test)')
     plt.xlabel(xlabel, fontsize='x-large', fontweight='light')
     plt.ylabel(ylabel, fontsize='x-large', fontweight='light')
     plt.hist(data1, bins=10, edgecolor='black', alpha=1, color='#b5cce4', histtype='bar',
@@ -461,84 +477,108 @@ def draw_dna_rna_prot_length_distribution_image(train_data,test_data,config):
     plt.hist(data2, bins=10, edgecolor='black', alpha=0.50, color='#f9f8fd', histtype='bar',
              align='mid', orientation='vertical', rwidth=None, log=False, label='negative', stacked=False, )
     plt.legend(frameon=False)
-    plt.savefig('{}/{}.{}'.format(config.path_save,config['type'] + 'statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config.path_save, config['type'] + 'statistics', 'jpg'))
     # plt.show()
 
-def draw_ROC_PRC_curve(roc_datas, prc_datas,  config):
+
+def draw_ROC_PRC_curve(roc_datas, prc_datas, config):
     # roc_data = [FPR, TPR, AUC]
     # prc_data = [recall, precision, AP]
 
-    plt.figure(figsize=(16, 8))
+    f, (ax1, ax2) = plt.subplots(figsize=(16, 8), ncols=2)
     plt.subplots_adjust(wspace=0.2, hspace=0.3)
     lw = 2
 
     plt.subplot(1, 2, 1)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['top'].set_visible(False)
     for index, roc_data in enumerate(roc_datas):
-            plt.plot(roc_data[0], roc_data[1], color=colors[index],lw=lw, label=config['names'][index] + ' (AUC = %0.2f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        y = util_data.smooth(roc_data[1])
+        # y_smooth = make_interp_spline(np.array(roc_data[0]), np.array(roc_data[1]))(x_smooth)
+        plt.plot(roc_data[0], y, color=colors[index], lw=lw,
+                 label=config['names'][index] + ' (AUC = %0.2f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
+    # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 20})
-    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 20})
-    plt.title('receiver operating characteristic curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(loc="lower right", prop={'weight': 'normal', 'size': 16})
+    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 18})
+    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 18})
+    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 23})
+    plt.legend(loc="lower right", prop={'weight': 'normal', 'size': 14})
 
     plt.subplot(1, 2, 2)
+    ax2.spines['right'].set_visible(False)
+    ax2.spines['top'].set_visible(False)
     # plt.step(self.prc_data[0], self.prc_data[1], color='b', alpha=0.2,where='post')
     # plt.fill_between(prc_data[0], prc_data[1], step='post', alpha=0.2,color='b')
     for index, prc_data in enumerate(prc_datas):
-        plt.plot(prc_data[0], prc_data[1], color=colors[index],
-             lw=lw, label=config['names'][index] + ' (AP = %0.2f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
+        y = util_data.smooth(prc_data[1])
+        plt.plot(prc_data[0], y, color=colors[index],
+                 lw=lw, label=config['names'][index] + ' (AP = %0.2f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
 
-    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 20})
-    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 20})
-    plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
+    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 18})
+    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 18})
+    # plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.title('Precision Recall curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 16})
+    plt.title('PR curve', fontdict={'weight': 'normal', 'size': 23})
+    plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 14})
 
     plt.savefig(
         '{}/{}.{}'.format(config['savepath'], 'ROC_PRC', 'jpg'))
     # plt.show()
 
+
 def draw_tra_ROC_PRC_curve(roc_datas, prc_datas, config):
     # roc_data = [FPR, TPR, AUC]
     # prc_data = [recall, precision, AP]
 
-    plt.figure(figsize=(16, 8))
+    # roc_data = [FPR, TPR, AUC]
+    # prc_data = [recall, precision, AP]
+
+    f, (ax1, ax2) = plt.subplots(figsize=(16, 8), ncols=2)
     plt.subplots_adjust(wspace=0.2, hspace=0.3)
     lw = 2
 
     plt.subplot(1, 2, 1)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['top'].set_visible(False)
     for index, roc_data in enumerate(roc_datas):
-            plt.plot(roc_data[0], roc_data[1], color=colors[index*3], lw=lw, label=config['tra_name'][index] + ' (AUC = %0.2f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        y = util_data.smooth(roc_data[1])
+        # y_smooth = make_interp_spline(np.array(roc_data[0]), np.array(roc_data[1]))(x_smooth)
+        plt.plot(roc_data[0], y, color=colors[index], lw=lw,
+                 label=config['tra_name'][index] + ' (AUC = %0.2f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
+    # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 20})
-    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 20})
-    plt.title('receiver operating characteristic curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(loc="lower right", prop={'weight': 'normal', 'size': 16})
+    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 18})
+    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 18})
+    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 23})
+    plt.legend(loc="lower right", prop={'weight': 'normal', 'size': 14})
 
     plt.subplot(1, 2, 2)
+    ax2.spines['right'].set_visible(False)
+    ax2.spines['top'].set_visible(False)
     # plt.step(self.prc_data[0], self.prc_data[1], color='b', alpha=0.2,where='post')
     # plt.fill_between(prc_data[0], prc_data[1], step='post', alpha=0.2,color='b')
     for index, prc_data in enumerate(prc_datas):
-        plt.plot(prc_data[0], prc_data[1], color=colors[index*3],
-             lw=lw, label=config['tra_name'][index] + ' (AP = %0.2f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
+        y = util_data.smooth(prc_data[1])
+        plt.plot(prc_data[0], y, color=colors[index],
+                 lw=lw, label=config['tra_name'][index] + ' (AP = %0.2f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
 
-    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 20})
-    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 20})
-    plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
+
+    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 18})
+    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 18})
+    # plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.title('Precision Recall curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 16})
+    plt.title('PR curve', fontdict={'weight': 'normal', 'size': 23})
+    plt.legend(loc="lower left", prop={'weight': 'normal', 'size': 14})
 
     plt.savefig(
         '{}/{}.{}'.format(config['savepath'], 'tra_ROC_PRC', 'jpg'))
     # plt.show()
+
+
 # def draw_statistics_bar(traindataset, testdataset, config):
 #     totaldataset = []
 #     totaldataset.extend(traindataset)
@@ -576,12 +616,12 @@ def draw_tra_ROC_PRC_curve(roc_datas, prc_datas, config):
 #
 #     plt.show()
 
-def draw_umap(repres_list,label_list,config):
-    #配色、名称、坐标轴待统一样式修改
+def draw_umap(repres_list, label_list, config):
+    # 配色、名称、坐标轴待统一样式修改
     # print(repres_list)
     # print(np.array(repres_list).shape)
     cmap = ListedColormap(['#00beca', '#f87671'])
-    repres=np.array(repres_list)
+    repres = np.array(repres_list)
     label = np.array(label_list)
     scaled_data = StandardScaler().fit_transform(repres)
     reducer = umap.UMAP()
@@ -603,14 +643,15 @@ def draw_umap(repres_list,label_list,config):
     # ax.spines['top'].set_visible(False)
     plt.gca().set_aspect('equal', 'datalim')
     # plt.title('UMAP projection ', fontsize=24)
-    # plt.show()
+    plt.show()
 
-def draw_negative_density(repres_list, label_list,config):
+
+def draw_negative_density(repres_list, label_list, config):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
     # mid = [[0.2,0.3,0.4,0.5,0.6,0.7]]
-    len_ls=np.array(repres_list)
-    y_ls=np.array(label_list)
+    len_ls = np.array(repres_list)
+    y_ls = np.array(label_list)
     # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
     # sns.kdeplot(len_ls1[y_ls == 0], shade=True, alpha=.25, label='model B', color='#00CCCC')
     for i in range(config['model_number']):
@@ -633,9 +674,10 @@ def draw_negative_density(repres_list, label_list,config):
     fig.subplots_adjust(top=0.7, left=0.2)
     plt.tight_layout()
     plt.savefig('{}/{}.{}'.format(config['savepath'], 'negative_density', 'jpg'))
-    # plt.show()
+    plt.show()
 
-def draw_positive_density(repres_list, label_list,config):
+
+def draw_positive_density(repres_list, label_list, config):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
     # sns.kdeplot(len_ls[y_ls == 0], shade=True, alpha=.25, label='model A', common_norm=False, color='#CC3366')
@@ -660,47 +702,53 @@ def draw_positive_density(repres_list, label_list,config):
     fig.subplots_adjust(top=0.7, left=0.2)
     plt.tight_layout()
     plt.savefig('{}/{}.{}'.format(config['savepath'], 'positive_density', 'jpg'))
-    # plt.show()
+    plt.show()
+
 
 def construct_data(data):
-    datas={'all_need':[],
-          '1_in_3':[data['train_data'],data['test_data']],
-          False:[data['train_data'],data['test_data']]}
+    datas = {'all_need': [],
+             '1_in_3': [data['train_data'], data['test_data']],
+             False: [data['train_data'], data['test_data']]}
     # for i in range()
-    draw_umap=[data['repres_list'],data['label_list']]
+    draw_umap = [data['repres_list'], data['label_list']]
     datas['all_need'].append(draw_umap)
+
     draw_ROC_PRC_curve = [data['roc_datas'], data['prc_datas']]
     datas['all_need'].append(draw_ROC_PRC_curve)
-    neg=np.array(data['neg_list'])
-    label=np.array(data['label_list'])
+
+    neg = np.array(data['neg_list'])
+    label = np.array(data['label_list'])
     draw_negative_density = [neg, label]
     datas['all_need'].append(draw_negative_density)
+
     pos = np.array(data['pos_list'])
-    draw_positive_density=[pos,label]
+    draw_positive_density = [pos, label]
     datas['all_need'].append(draw_positive_density)
-    draw_tra_ROC_PRC_curve = [data['tra_roc_datas'], data['tra_prc_datas']]
+
+    draw_tra_ROC_PRC_curve = [data['roc_datas'] + data['tra_roc_datas'], data['prc_datas'] + data['tra_prc_datas']]
     datas['all_need'].append(draw_tra_ROC_PRC_curve)
 
     # data['config']['savepath'] = './data/result/train01'
-    config=data['config']
-    return datas,config
+    config = data['config']
+    return datas, config
 
-def draw_plots(data,config):
-    #为了保证函数的优雅性，需要将画图函数的参数统一修改为data1,data2,config三个
-    #把每个函数的plt.show()取消掉
-    #测试数据中config参数不全&train\test data格式不对
-    #传参给此函数时data为字典：{type:[[[data1],[data2]],[[data1],[data2]]...]}
-    #问题：柱状图为什么plt.show()了两次
 
-    tag=['a','b','c','d','e','f','g','h']
+def draw_plots(data, config):
+    # 为了保证函数的优雅性，需要将画图函数的参数统一修改为data1,data2,config三个
+    # 把每个函数的plt.show()取消掉
+    # 测试数据中config参数不全&train\test data格式不对
+    # 传参给此函数时data为字典：{type:[[[data1],[data2]],[[data1],[data2]]...]}
+    # 问题：柱状图为什么plt.show()了两次
+
+    tag = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     if config['model_number'] % 2 == 0:
         col = 2
     else:
         col = 3
 
     fig = plt.figure()
-    #umap拼图
-    if config['model_number']==1:
+    # umap拼图
+    if config['model_number'] == 1:
         # pass
         eval(image_type['all_need'][0])(data['all_need'][0][0][0], data['all_need'][0][1][0], config)
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'UMAP', 'png'))
@@ -721,33 +769,35 @@ def draw_plots(data,config):
 
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'UMAP', 'png'))
         # plt.show()
-    #其他都需要画的图
+    # 其他都需要画的图
     for img in range(1, len(image_type['all_need'])):
-
         eval(image_type['all_need'][img])(data['all_need'][img][0], data['all_need'][img][1], config)
 
-    #3选1
+    # 3选1
     # print(data['1_in_3'][0])
     eval(image_type['1_in_3'][config['type']])(data['1_in_3'][0], data['1_in_3'][1], config)
     # 画motif还是长度分布
     if config['if_same']:
+        motif_title = ['train_positive_motif', 'train_negative_motif', 'test_positive_motif', 'test_negative_motif']
         for i in range(4):
-            motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --format PNG -f " + config['fasta_list'][i] + " -o "+ config['savepath']+"/motif_"+(str)(i)+".png"
+            motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --resolution 500 --format PNG -f " + \
+                    config['fasta_list'][i] + " --title " + motif_title[i] + " -o " + config['savepath'] + "/motif_" + (str)(
+                i) + ".png"
             os.system(motif)
     else:
         eval(image_type[False])(data['1_in_3'][0], data['1_in_3'][1], config)
 
+
 def plot_interface(plot_data):
-    data,config=construct_data(plot_data)
+    data, config = construct_data(plot_data)
     draw_plots(data, config)
 
+
 if __name__ == '__main__':
-
-
-    plot_data=torch.load('plot_data1.pth')
+    plot_data = torch.load('plot_data1.pth')
     plot_data['config']['tra_name'] = ['a', 'b', 'c']
     # print(plot_data['config'])
     # print(plot_data['repres_list'])
     # print(len(plot_data['repres_list'][0][0]))
-    data,config=construct_data(plot_data)
+    data, config = construct_data(plot_data)
     draw_plots(data, config)

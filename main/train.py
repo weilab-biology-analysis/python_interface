@@ -4,6 +4,7 @@ import pickle
 import json
 import zipfile
 import torch
+import numpy as np
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -18,12 +19,16 @@ from traditional_desc import generate
 
 def SL_train(config, modelsORpara):
     torch.cuda.set_device(config.device)
+
     roc_datas, prc_datas = [], []
     repres_list, label_list = [], []
     train_seq, test_seq = [], []
     train_label, test_label = [], []
     pos_list = []
     neg_list = []
+    best_performance = []
+    data_statistic = [] # train pos, train neg, test pos, test neg
+
     if_same = config.if_same
     if_same = True
     savepath = '/data/result/' + config.learn_name
@@ -48,7 +53,7 @@ def SL_train(config, modelsORpara):
     tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1, 2], config)
 
     plot_config = {'names': names,
-                   'tra_name': tra_name,
+                   'tra_name': names + tra_name,
                    'model_number': len(modelsORpara),
                    'savepath': savepath + '/plot',
                    'type': config.type,
@@ -89,6 +94,12 @@ def SL_train(config, modelsORpara):
             test_label = learner.dataManager.test_label
             train_data = [train_seq, train_label]
             test_data = [test_seq, test_label]
+
+            data_statistic.append(np.bincount(np.array(train_label))[1]) # train_pos
+            data_statistic.append(np.bincount(np.array(train_label))[0]) # train_neg
+            data_statistic.append(np.bincount(np.array(test_label))[1]) # test_pos
+            data_statistic.append(np.bincount(np.array(test_label))[0]) # test_neg
+
             # util_plot.draw_statistics_bar(learner.dataManager.train_dataset, learner.dataManager.test_dataset, config)
 
         # plot data prepare
@@ -98,6 +109,8 @@ def SL_train(config, modelsORpara):
         pos_list.append(learner.visualizer.pos_list)
         neg_list.append(learner.visualizer.neg_list)
         label_list.append(learner.visualizer.label_list)
+
+        best_performance.append(learner.modelManager.best_performance)
         # plot_config['name'].append(str(model))
 
     # print("logits_list1: ", logits_list)
@@ -124,7 +137,11 @@ def SL_train(config, modelsORpara):
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
     # learner.test_model()
 
-    # return data
+    tabel_data = {}
+    tabel_data["best_performance"] = best_performance
+    tabel_data["data_statistic"] = data_statistic
+
+    return tabel_data
 
 def SL_test():
     # config = config_SL.get_config()
@@ -133,14 +150,13 @@ def SL_test():
     learner = Learner.Learner(config)
     learner.setIO()
     learner.setVisualization()
-    learner.load_data()
+    learner.SL_test_load_data()
     learner.init_model()
     learner.load_params()
     learner.init_optimizer()
     learner.def_loss_func()
     learner.train_model()
     learner.test_model()
-
 
 def gpu_test():
     config = config_init.get_config()
@@ -163,11 +179,10 @@ def gpu_test():
     config.type = "DNA"
     config.if_same = True
     # SL_train(config, ["LSTM", "TransformerEncoder"])
-    SL_train(config, ["TransformerEncoder"])
-    # SL_train(config, ["TextRCNN"])
+    # SL_train(config, ["TransformerEncoder"])
+    SL_train(config, ["TextCNN"])
     # SL_train(config, ["TextGCN"])
     # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
-
 
 def server_use():
     model_all = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
@@ -212,14 +227,14 @@ def server_use():
     elif config.minimode == 'modelCompare':
         modelchoice = setting["modelCompare"].split(' ')
         models = []
-
         for choice in modelchoice:
+            print(choice)
             models.append(model_all[int(choice)])
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
     try:
-        SL_train(config, models)
+        tabel_data = SL_train(config, models)
 
         # resultdir = '/data/result/' + config.learn_name
         # zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
@@ -242,7 +257,8 @@ def server_use():
 
         result = {
             # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
-            "pictures": pictureArray
+            "pictures": pictureArray,
+            "tabel_data": tabel_data
         }
 
         postget = requests.post(requests_url, util_json.get_json(config.learn_name, 2, json.dumps(result)))
@@ -252,7 +268,6 @@ def server_use():
         requests.post(requests_url, util_json.get_json(config.learn_name, -1))
 
     # SL_train(config, models)
-
 
 if __name__ == '__main__':
     # server_use()

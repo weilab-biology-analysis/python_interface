@@ -85,7 +85,8 @@ class DataManager():
         #     self.config.max_len = self.data_max_len
 
     def SL_test_load_data(self):
-        pass
+        self.train_dataset, self.train_label, self.test_dataset, self.test_label = util_file.load_fasta(
+            self.config.path_data)
 
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:

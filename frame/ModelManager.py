@@ -380,7 +380,7 @@ class ModelManager():
                 self.IOManager.log.Info(log_text)
 
                 test_mcc = test_performance[0]  # test_performance: [ACC, Sensitivity, Specificity, AUC, MCC]
-                if test_mcc > best_mcc:
+                if test_mcc >= best_mcc:
                     best_mcc = test_mcc
                     best_performance = test_performance
                     best_ROC = ROC_data
