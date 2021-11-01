@@ -40,6 +40,8 @@ class DataManager():
         self.test_dataloader = None
 
         self.token2index = None
+        self.predict_data = []
+        self.predict_num = []
 
     def SL_train_load_data(self):
         self.train_dataset, self.train_label, self.test_dataset,self.test_label = util_file.load_fasta(self.config.path_data)
@@ -71,7 +73,7 @@ class DataManager():
                 self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
             elif self.config.type == 'RNA':
                 self.token2index = pickle.load(open('../data/statistic/RNAtoken2index.pkl', 'rb'))
-            elif self.config.type == 'RNA':
+            elif self.config.type == 'protein':
                 self.token2index = pickle.load(open('../data/statistic/proteintoken2index.pkl', 'rb'))
             self.train_dataloader = self.construct_dataset_with_same_len(self.train_dataset, self.train_label, self.config.cuda,
                                                            self.config.batch_size)
@@ -85,8 +87,25 @@ class DataManager():
         #     self.config.max_len = self.data_max_len
 
     def SL_test_load_data(self):
-        self.train_dataset, self.train_label, self.test_dataset, self.test_label = util_file.load_fasta(
-            self.config.path_data)
+        if self.config.type == 'DNA':
+            self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
+        elif self.config.type == 'RNA':
+            self.token2index = pickle.load(open('../data/statistic/RNAtoken2index.pkl', 'rb'))
+        elif self.config.type == 'protein':
+            self.token2index = pickle.load(open('../data/statistic/proteintoken2index.pkl', 'rb'))
+
+        if self.config.datatype == 'userprovide':
+            self.test_dataset = util_file.load_test_fasta(self.config.path_data)
+            for seq in self.test_dataset:
+                seqcut = 0
+                for pos in range(len(seq)-self.config.max_len+1):
+                    seqcut = + seqcut
+                    seq_cut_origin = seq[pos:pos + self.config.max_len]
+                    seq_index = [self.token2index[token] for token in seq_cut_origin]
+                    self.predict_data.append(seq_index)
+                self.predict_num.append(seqcut)
+        elif self.config.datatype == 'gene':
+            pass
 
     def construct_dataset(self, sequences, labels, cuda, batch_size):
         # if cuda:

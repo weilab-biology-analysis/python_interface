@@ -137,26 +137,36 @@ def SL_train(config, modelsORpara):
     # util_plot.draw_ROC_PRC_curve(roc_datas, prc_datas, name, config)
     # learner.test_model()
 
-    tabel_data = {}
-    tabel_data["best_performance"] = best_performance
-    tabel_data["data_statistic"] = data_statistic
+    table_data = {}
+    table_data["best_performance"] = best_performance
+    table_data["data_statistic"] = data_statistic
 
-    return tabel_data
+    return table_data
 
-def SL_test():
+def SL_test(setting, jobID, name, model):
     # config = config_SL.get_config()
-    config = pickle.load(open('../result/jobID/config.pkl', 'rb'))
-    config.path_params = '../result/jobID/DNAbert, MCC[0.64].pt'
+
+    config = pickle.load(open('/data/result/' + jobID + '/' + name + '/config.pkl', 'rb'))
+    config.path_params = '/data/result/' + jobID + '/' + name + '/model.pt'
+
+    # 因为这里config被覆盖了，所以要重新赋值
+    config.path_data = config.origin_path_data = setting["requestDataPath"]
+    config.path_save = setting["resultDataPath"]
+
+    config.mode = setting["mode"]
+    config.minimode = setting["minimode"]
+    config.type = setting["type"]
+    config.if_same = True
+
     learner = Learner.Learner(config)
     learner.setIO()
     learner.setVisualization()
     learner.SL_test_load_data()
     learner.init_model()
     learner.load_params()
-    learner.init_optimizer()
-    learner.def_loss_func()
-    learner.train_model()
+
     learner.test_model()
+    return learner.modelManager.predict_answer
 
 def gpu_test():
     config = config_init.get_config()
@@ -196,11 +206,11 @@ def server_use():
     # RNA_model = ["TransformerEncoder", "TextCNN", "LSTM", "GCN"]
     # prot_model = ["prot_bert", "TransformerEncoder", "TextCNN", "LSTM", "GCN"]
 
+    requests_url = "http://server.wei-group.net/biology/job/status/update"
     os.chdir("/home/weilab/molecular_analysis_server/biology_python/main")
     # print(sys.argv[2])
     # print(type(sys.argv[2]))
     setting = json.loads(sys.argv[2])
-    requests_url = "http://server.wei-group.net/biology/job/status/update"
 
     config = config_init.get_config()
     config.learn_name = str(setting["jobId"])
@@ -214,52 +224,74 @@ def server_use():
 
     os.mkdir(config.path_save + '/' + config.learn_name)
 
-    # a = '01234'
-    # list(a)
-    # Out[6]: ['0', '1', '2', '3', '4']
-    if config.minimode == 'paramCompare':
-        config.paramCompare = setting['paramCompare']
-        config.model = model_all[int(setting['paramCompareModel'])]
-        if config.paramCompare == "CDHit":
-            CDHitlist = list(setting['CDHit'])
-            models = [i / 10 for i in CDHitlist]
-
-    elif config.minimode == 'modelCompare':
-        modelchoice = setting["modelCompare"].split(' ')
-        models = []
-        for choice in modelchoice:
-            print(choice)
-            models.append(model_all[int(choice)])
-
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
     try:
-        tabel_data = SL_train(config, models)
+        if config.mode == "train-test":
+            # a = '01234'
+            # list(a)
+            # Out[6]: ['0', '1', '2', '3', '4']
+            if config.minimode == 'paramCompare':
+                config.paramCompare = setting['paramCompare']
+                config.model = model_all[int(setting['paramCompareModel'])]
+                if config.paramCompare == "CDHit":
+                    CDHitlist = list(setting['CDHit'])
+                    models = [i / 10 for i in CDHitlist]
 
-        # resultdir = '/data/result/' + config.learn_name
-        # zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
-        # # 把zfile整个目录下所有内容，压缩为new.zip文件
-        # zip_file.write(resultdir, compress_type=zipfile.ZIP_DEFLATED)
-        # zip_file.close()
+            elif config.minimode == 'modelCompare':
+                modelchoice = setting["modelCompare"].split(' ')
+                models = []
+                for choice in modelchoice:
+                    print(choice)
+                    models.append(model_all[int(choice)])
 
-        # pictureArray = {}
+            table_data = SL_train(config, models)
 
-        path_data = "http://server.wei-group.net" + '/result/' + config.learn_name + '/plot/'
+            # resultdir = '/data/result/' + config.learn_name
+            # zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
+            # # 把zfile整个目录下所有内容，压缩为new.zip文件
+            # zip_file.write(resultdir, compress_type=zipfile.ZIP_DEFLATED)
+            # zip_file.close()
 
-        for root, dirs, files in os.walk(config.path_save + '/' + config.learn_name + '/plot'):
-            print("files", files)  # 当前路径下所有非目录子文件
-            pictureArray = [path_data + i for i in files ]
+            # pictureArray = {}
 
-        #
-        # for model in models:
-        #     pictureArray.append(
-        #         "http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
+            path_data = "http://server.wei-group.net" + '/result/' + config.learn_name + '/plot/'
+            for root, dirs, files in os.walk(config.path_save + '/' + config.learn_name + '/plot'):
+                print("files", files)  # 当前路径下所有非目录子文件
+                pictureArray = [path_data + i for i in files ]
 
-        result = {
-            # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
-            "pictures": pictureArray,
-            "tabel_data": tabel_data
-        }
+            # for model in models:
+            #     pictureArray.append(
+            #         "http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
+
+            result = {
+                # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
+                "pictures": pictureArray,
+                "tabel_data": table_data
+            }
+
+        elif config.mode == 'annotation':
+            if config.type == 'DNA' or 'RNA':
+
+                if config.minimode == 'chooseID':
+                    jobID = int(setting["jobID"])
+                    config.model = model_all[int(setting["model"])]
+                    if config.model in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
+                        name = 'DNAbert'
+                    else:
+                        name = config.model
+                    table_data = SL_test(setting, jobID, name, config.model)
+
+                    result = {
+                        # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
+                        "tabel_data": table_data
+                    }
+
+                elif config.minimode == 'default':
+                    config.predictType = setting['predicttype']
+
+            elif config.type == 'protein':
+                pass
 
         postget = requests.post(requests_url, util_json.get_json(config.learn_name, 2, json.dumps(result)))
         print(postget.text)

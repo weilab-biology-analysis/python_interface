@@ -30,6 +30,8 @@ class ModelManager():
         self.valid_performance = []
         self.avg_test_loss = 0
 
+        self.predict_answer = None
+
     def init_model(self):
         # Todo
         if self.mode == 'train-test':
@@ -166,6 +168,10 @@ class ModelManager():
                 self.IOManager.log.Info(log_text)
             else:
                 self.IOManager.log.Warn('Test Data is None.')
+        elif self.mode == 'annotation':
+            predict_data = self.dataManager.predict_data
+            predict_num = self.dataManager.predict_num
+            self.predict_answer = self.__predict(predict_data, predict_num)
         else:
             self.IOManager.log.Error('No Such Mode')
 
@@ -584,4 +590,26 @@ class ModelManager():
         performance, ROC_data, PRC_data = self.__caculate_metric(pred_prob, label_pred, label_real)
 
         return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, pos_list, neg_list
+
+    def __predict(self, predict_data, predict_num):
+        logits_data_all = []
+
+        self.model.eval()
+        # for seq in predict_data:
+        logits, _ = self.model(predict_data)
+
+        pred_prob_all = F.softmax(logits, dim=1)  # 预测概率 [batch_size, class_num]
+
+        pred_prob_sort = torch.max(pred_prob_all, 1)  # 每个样本中预测的最大的概率 [batch_size]
+        pred_class = pred_prob_sort[1]  # 每个样本中预测的最大的概率所在的位置（类别） [batch_size]
+
+        count_sum = 0
+        for index, count in enumerate(predict_num):
+            for i in range(count):
+                if pred_class[i + count_sum] == 1:
+                    # 第几个序列， 在这条序列的第几个位置上， 置信度
+                    logits_data_all.append([index, i, pred_prob_all[i + count_sum] ])
+            count_sum = +count
+
+        return logits_data_all
 

@@ -23,18 +23,28 @@ from util import util_data
 plt.rcParams['savefig.dpi'] = 300  # 图片像素
 plt.rcParams['figure.dpi'] = 300  # 分辨率
 
-colours = {
-    2:['#81d4fa', '#ef9a9a'],
-    4:['#7AB4D0', '#7D9DD2', '#9683D6', '#B286D8'],
-    6:['#C86A63', '#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F','#7D9DD2'],
-    8:['#DE8787', '#DEB487', '#D4DE87', '#9FDE87', '#87DEBA', '#87B9DE', '#8C87DE', '#C587DE' ],
-    12:['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da',
-          '#00df83', '#a4e312']
+colors = {
+    1: ['#81d4fa'],
+    2: ['#81d4fa', '#ef9a9a'],
+    3: ['#7AB4D0', '#7D9DD2', '#ef9a9a'],
+    4: ['#7AB4D0', '#7D9DD2', '#9683D6', '#B286D8'],
+    5: ['#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F', '#7D9DD2'],
+    6: ['#C86A63', '#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F', '#7D9DD2'],
+    7: ['#C86A63', '#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F', '#87DEBA', '#87B9DE'],
+    8: ['#DE8787', '#DEB487', '#D4DE87', '#9FDE87', '#87DEBA', '#87B9DE', '#8C87DE', '#C587DE'],
+    9: ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#9FDE87', '#87DEBA', '#87B9DE'],
+    10: ['#DE8787', '#DEB487', '#D4DE87', '#9FDE87', '#87DEBA', '#87B9DE', '#8C87DE', '#547bf3', '#0091ff', '#00b6ff'],
+    11: ['#C86A63', '#CA8B66', '#CCAB69', '#CFCB6C', '#B7D16F', '#87B9DE', '#8C87DE', '#e01b77', '#d31b92', '#bb2cad',
+         '#983fc5'],
+    12: ['#e52d5d', '#e01b77', '#d31b92', '#bb2cad', '#983fc5', '#7b60e0', '#547bf3', '#0091ff', '#00b6ff', '#00d0da',
+         '#00df83', '#a4e312'],
 }
 
-image_type={'all_need':['draw_umap', 'draw_shap', 'draw_ROC_PRC_curve','draw_negative_density','draw_positive_density','draw_tra_ROC_PRC_curve'],
-            '1_in_3':{'prot':'draw_hist_image','DNA':'draw_dna_hist_image','RNA':'draw_rna_hist_image'},
-            False:['draw_dna_rna_prot_length_distribution_image']}
+image_type = {
+    'all_need': ['draw_umap', 'draw_shap', 'draw_ROC_PRC_curve', 'draw_negative_density', 'draw_positive_density',
+                 'draw_tra_ROC_PRC_curve'],
+    '1_in_3': {'prot': 'draw_hist_image', 'DNA': 'draw_dna_hist_image', 'RNA': 'draw_rna_hist_image'},
+    False: ['draw_dna_rna_prot_length_distribution_image']}
 
 
 def draw_hist_image(train_data, test_data, config):
@@ -571,7 +581,6 @@ def draw_tra_ROC_PRC_curve(roc_datas, prc_datas, config):
         plt.plot(prc_data[0], y, color=colors[index],
                  lw=lw, label=config['tra_name'][index] + ' (AP = %0.2f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
 
-
     plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 18})
     plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 18})
     # plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
@@ -651,6 +660,7 @@ def draw_umap(repres_list, label_list, config):
     # plt.title('UMAP projection ', fontsize=24)
     # plt.show()
 
+
 def draw_shap(repres_list, label_list, config):
     # 这里需要计算一个dataframe 表格
     # 这里假设 n * M 的n 是样本
@@ -662,7 +672,8 @@ def draw_shap(repres_list, label_list, config):
     shap_values = explainer.shap_values(repres_list)
     shap.summary_plot(shap_values, repres_list, show=False)
 
-def draw_negative_density(repres_list, label_list,config):
+
+def draw_negative_density(repres_list, label_list, config):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
     # mid = [[0.2,0.3,0.4,0.5,0.6,0.7]]
@@ -692,6 +703,7 @@ def draw_negative_density(repres_list, label_list,config):
     plt.savefig('{}/{}.{}'.format(config['savepath'], 'negative_density', 'jpg'))
     # plt.show()
 
+
 def draw_positive_density(repres_list, label_list, config):
     plt.figure(figsize=(30, 15))
     fig, ax = plt.subplots()
@@ -719,14 +731,15 @@ def draw_positive_density(repres_list, label_list, config):
     plt.savefig('{}/{}.{}'.format(config['savepath'], 'positive_density', 'jpg'))
     # plt.show()
 
+
 def construct_data(data):
     datas = {'all_need': [],
              '1_in_3': [data['train_data'], data['test_data']],
              False: [data['train_data'], data['test_data']]}
     # for i in range()
-    draw_umap=[data['repres_list'], data['label_list']]
+    draw_umap = [data['repres_list'], data['label_list']]
     datas['all_need'].append(draw_umap)
-    draw_shap=[data['repres_list'], data['label_list']]
+    draw_shap = [data['repres_list'], data['label_list']]
     datas['all_need'].append(draw_shap)
     draw_ROC_PRC_curve = [data['roc_datas'], data['prc_datas']]
     datas['all_need'].append(draw_ROC_PRC_curve)
@@ -796,9 +809,8 @@ def draw_plots(data, config):
             ax.set_xlabel('SHAP value')
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'SHAP', 'png'))
         # plt.show()
-    #其他都需要画的图
+    # 其他都需要画的图
     for img in range(2, len(image_type['all_need'])):
-
         eval(image_type['all_need'][img])(data['all_need'][img][0], data['all_need'][img][1], config)
 
     # 3选1
@@ -809,7 +821,8 @@ def draw_plots(data, config):
         motif_title = ['train_positive_motif', 'train_negative_motif', 'test_positive_motif', 'test_negative_motif']
         for i in range(4):
             motif = "/home/weilab/anaconda3/envs/wy/bin/weblogo --resolution 500 --format PNG -f " + \
-                    config['fasta_list'][i] + " --title " + motif_title[i] + " -o " + config['savepath'] + "/motif_" + (str)(
+                    config['fasta_list'][i] + " --title " + motif_title[i] + " -o " + config['savepath'] + "/motif_" + (
+                        str)(
                 i) + ".png"
             os.system(motif)
     else:

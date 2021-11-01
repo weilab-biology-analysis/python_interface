@@ -71,21 +71,13 @@ def load_test_fasta(filename, skip_first=False):
         content = file.read()
     content_split = content.split('\n')
 
-    train_dataset = []
-    train_label = []
     test_dataset = []
-    test_label = []
+
     for index, record in enumerate(content_split):
         if index % 2 == 1:
             continue
-        recordsplit = record.split('|')
-        if recordsplit[-1] == 'training':
-            train_label.append(int(recordsplit[-2]))
-            train_dataset.append(content_split[index + 1])
-        if recordsplit[-1] == 'testing':
-            test_label.append(int(recordsplit[-2]))
-            test_dataset.append(content_split[index + 1])
-    return train_dataset, train_label, test_dataset, test_label
+        test_dataset.append(content_split[index + 1])
+    return test_dataset
 
 if __name__ == '__main__':
     filename = '../data/test.txt'

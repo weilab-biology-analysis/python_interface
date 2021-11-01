@@ -23,7 +23,7 @@ def get_config():
     parse.add_argument('-path-data', type=str, default='/home/wrh/weilab_server/python_interface/data/test.txt', help='训练数据的位置')
     parse.add_argument('-path-params', type=str, default=None, help='模型参数路径')
     # parse.add_argument('-path-params', type=str, default='../result/SL_train_00/BERT, MCC[0.60].pt', help='模型参数路径')
-    parse.add_argument('-model-save-name', type=str, default='BERT', help='保存模型的命名')
+    parse.add_argument('-model-save-name', type=str, default='model', help='保存模型的命名')
     # parse.add_argument('-save-figure-type', type=str, default='jpeg', help='保存图片的文件类型')
     parse.add_argument('-save-figure-type', type=str, default='png', help='保存图片的文件类型')
 
