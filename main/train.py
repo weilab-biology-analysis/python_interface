@@ -4,6 +4,7 @@ import pickle
 import json
 import zipfile
 import torch
+import time
 import numpy as np
 
 curPath = os.path.abspath(os.path.dirname(__file__))
@@ -28,6 +29,7 @@ def SL_train(config, modelsORpara):
     neg_list = []
     best_performance = []
     data_statistic = [] # train pos, train neg, test pos, test neg
+    time_use = []
 
     if_same = config.if_same
     if_same = True
@@ -50,7 +52,10 @@ def SL_train(config, modelsORpara):
             if name in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
                 names[index] = 'DNAbert'
 
-    tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1, 2], config)
+    # tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1, 2], config)
+    print('tra start')
+    tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0], config)
+    print('tra end')
 
     plot_config = {'names': names,
                    'tra_name': names + tra_name,
@@ -76,6 +81,8 @@ def SL_train(config, modelsORpara):
         elif config.minimode == 'modelCompare':
             config.model = model
 
+        start = time.time()
+
         learner = Learner.Learner(config)
         learner.setIO()
         learner.setVisualization()
@@ -85,6 +92,9 @@ def SL_train(config, modelsORpara):
         learner.init_optimizer()
         learner.def_loss_func()
         learner.train_model()
+
+        end  = time.time()
+        time_use.append(start - end)
 
         if index == 0:
             print("save traindata and testdata")
@@ -124,11 +134,12 @@ def SL_train(config, modelsORpara):
                  'prc_datas': prc_datas,
                  'tra_roc_datas': tra_ROCdatas,
                  'tra_prc_datas': tra_PRCdatas,
-                 'config': plot_config
+                 'config': plot_config,
+                 'best_performance': best_performance
                  }
 
     util_plot.plot_interface(plot_data)
-
+    # print(best_performance)
     # drow(plot_data)
     # print("plot_data_save")
     # torch.save(plot_data, './plot_data.pth')
@@ -140,6 +151,7 @@ def SL_train(config, modelsORpara):
     table_data = {}
     table_data["best_performance"] = best_performance
     table_data["data_statistic"] = data_statistic
+    table_data["time_use"] = time_use
 
     return table_data
 
@@ -190,7 +202,7 @@ def gpu_test():
     config.if_same = True
     # SL_train(config, ["LSTM", "TransformerEncoder"])
     # SL_train(config, ["TransformerEncoder"])
-    SL_train(config, ["TextCNN", "LSTM", "TransformerEncoder"])
+    SL_train(config, ["LSTM", "BiLSTM", "VDCNN"])
     # SL_train(config, ["TextGCN"])
     # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
 
@@ -303,4 +315,5 @@ def server_use():
 
 if __name__ == '__main__':
     # server_use()
+    print(1)
     gpu_test()

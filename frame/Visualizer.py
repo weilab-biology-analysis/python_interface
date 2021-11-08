@@ -61,7 +61,7 @@ class Visualizer():
         plt.plot(self.step_test_interval, self.test_loss_record)
 
         plt.savefig('{}/{}.{}'.format(self.IOManager.result_path, self.config.learn_name + str(self.config.kmer) + "mer", self.config.save_figure_type))
-        plt.show()
+        # plt.show()
 
     def draw_ROC_PRC_curve(self):
         # roc_data = [FPR, TPR, AUC]
