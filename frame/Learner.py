@@ -55,7 +55,7 @@ class Learner():
         self.IOManager.log.Info('Learn Name: {}'.format(self.config.learn_name))
         self.IOManager.log.Info('Config: {}'.format(self.config))
         self.modelManager.train()
-        self.visualizer.draw_train_test_curve()
+        # self.visualizer.draw_train_test_curve()
         # self.visualizer.draw_tsne()
         # self.visualizer.draw_ROC_PRC_curve()
         self.IOManager.log.Info('Train Model Over.')

@@ -38,7 +38,7 @@ def get_config():
     # parse.add_argument('-if-transductive', type=bool, default=True, help='inductive or transductive')
     parse.add_argument('-if-transductive', type=bool, default=False, help='inductive or transductive')
 
-    parse.add_argument('-interval-log', type=int, default=20, help='经过多少batch记录一次训练状态')
+    parse.add_argument('-interval-log', type=int, default=10, help='经过多少batch记录一次训练状态')
     parse.add_argument('-interval-valid', type=int, default=1, help='经过多少epoch对交叉验证集进行测试')
     parse.add_argument('-interval-test', type=int, default=1, help='经过多少epoch对测试集进行测试')
 
