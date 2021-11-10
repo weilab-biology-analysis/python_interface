@@ -61,6 +61,16 @@ def main(featurechoice, config):
     return ROCdatas, PRCdatas, tra_name
 
 def gen(train_data, train_label, test_data, test_label):
+    # exam data code
+    # print(len(test_data))
+    # print(np.array(test_data).shape)
+    # y = len(test_data[0])
+    # for i, seq in enumerate(test_data):
+    #     # print(i)
+    #     if y != len(seq):
+    #         print(i)
+    #         print(seq)
+    #         print(len(seq))
 
     # Learn to predict each class against the other分类器设置
     from sklearn import svm

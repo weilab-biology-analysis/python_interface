@@ -3,7 +3,9 @@ import os
 import pickle
 import json
 import zipfile
+import copy
 import torch
+import time
 import numpy as np
 
 curPath = os.path.abspath(os.path.dirname(__file__))
@@ -27,7 +29,16 @@ def SL_train(config, modelsORpara):
     pos_list = []
     neg_list = []
     best_performance = []
-    data_statistic = [] # train pos, train neg, test pos, test neg
+    data_statistic = []  # train pos, train neg, test pos, test neg
+    time_use = []
+
+    step_log_interval = []
+    train_metric_record = []
+    train_loss_record = []
+
+    step_test_interval = []
+    test_metric_record = []
+    test_loss_record = []
 
     if_same = config.if_same
     if_same = True
@@ -45,12 +56,15 @@ def SL_train(config, modelsORpara):
             names.append(config.model + '_' + config.para + '_' + i)
 
     elif config.minimode == 'modelCompare':
-        names = modelsORpara
+        names = copy.deepcopy(modelsORpara)
         for index, name in enumerate(names):
             if name in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
                 names[index] = 'DNAbert'
 
-    tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1, 2], config)
+    # tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1, 2], config)
+    # print('tra start')
+    tra_ROCdatas, tra_PRCdatas, tra_name = generate.main([0, 1], config)
+    # print('tra end')
 
     plot_config = {'names': names,
                    'tra_name': names + tra_name,
@@ -60,7 +74,6 @@ def SL_train(config, modelsORpara):
                    'if_same': config.if_same,
                    'fasta_list': [savepath + '/train_positive.txt', savepath + '/train_negative.txt',
                                   savepath + '/test_positive.txt', savepath + '/test_negative.txt']}
-
 
     for index, model in enumerate(modelsORpara):
         # print(models)
@@ -76,6 +89,8 @@ def SL_train(config, modelsORpara):
         elif config.minimode == 'modelCompare':
             config.model = model
 
+        start = time.time()
+
         learner = Learner.Learner(config)
         learner.setIO()
         learner.setVisualization()
@@ -86,8 +101,11 @@ def SL_train(config, modelsORpara):
         learner.def_loss_func()
         learner.train_model()
 
+        end = time.time()
+        time_use.append(end - start)
+
         if index == 0:
-            print("save traindata and testdata")
+            # print("save traindata and testdata")
             train_seq = learner.dataManager.train_dataset
             test_seq = learner.dataManager.test_dataset
             train_label = learner.dataManager.train_label
@@ -95,10 +113,10 @@ def SL_train(config, modelsORpara):
             train_data = [train_seq, train_label]
             test_data = [test_seq, test_label]
 
-            data_statistic.append(np.bincount(np.array(train_label))[1]) # train_pos
-            data_statistic.append(np.bincount(np.array(train_label))[0]) # train_neg
-            data_statistic.append(np.bincount(np.array(test_label))[1]) # test_pos
-            data_statistic.append(np.bincount(np.array(test_label))[0]) # test_neg
+            data_statistic.append(np.bincount(np.array(train_label))[1])  # train_pos
+            data_statistic.append(np.bincount(np.array(train_label))[0])  # train_neg
+            data_statistic.append(np.bincount(np.array(test_label))[1])  # test_pos
+            data_statistic.append(np.bincount(np.array(test_label))[0])  # test_neg
 
             # util_plot.draw_statistics_bar(learner.dataManager.train_dataset, learner.dataManager.test_dataset, config)
 
@@ -113,6 +131,25 @@ def SL_train(config, modelsORpara):
         best_performance.append(learner.modelManager.best_performance)
         # plot_config['name'].append(str(model))
 
+        step_log_interval.append(learner.visualizer.step_test_interval)
+        train_metric_record.append(learner.visualizer.train_metric_record)
+        train_loss_record.append(learner.visualizer.train_loss_record)
+
+        step_test_interval.append(learner.visualizer.step_test_interval)
+        test_metric_record.append(learner.visualizer.test_metric_record)
+        test_loss_record.append(learner.visualizer.test_loss_record)
+
+    epoch_data = {
+        'step_log_interval': step_log_interval,
+        'train_metric_record': train_metric_record,
+        'train_loss_record': train_loss_record,
+
+        'step_test_interval': step_test_interval,
+        'test_metric_record': test_metric_record,
+        'test_loss_record': test_loss_record,
+    }
+
+    # print(epoch_data)
     # print("logits_list1: ", logits_list)
     plot_data = {'train_data': train_data,
                  'test_data': test_data,
@@ -124,11 +161,13 @@ def SL_train(config, modelsORpara):
                  'prc_datas': prc_datas,
                  'tra_roc_datas': tra_ROCdatas,
                  'tra_prc_datas': tra_PRCdatas,
-                 'config': plot_config
+                 'config': plot_config,
+                 'best_performance': best_performance,
+                 'epoch_data': epoch_data
                  }
 
     util_plot.plot_interface(plot_data)
-
+    # print(best_performance)
     # drow(plot_data)
     # print("plot_data_save")
     # torch.save(plot_data, './plot_data.pth')
@@ -140,8 +179,14 @@ def SL_train(config, modelsORpara):
     table_data = {}
     table_data["best_performance"] = best_performance
     table_data["data_statistic"] = data_statistic
+    table_data["time_use"] = time_use
+    table_data["name"] = names
+
+    table_data = str(table_data)
+    table_data = eval(table_data)
 
     return table_data
+
 
 def SL_test(setting, jobID, name, model):
     # config = config_SL.get_config()
@@ -168,6 +213,14 @@ def SL_test(setting, jobID, name, model):
     learner.test_model()
     return learner.modelManager.predict_answer
 
+
+def default_predict(config):
+    if config.type == 'DNA':
+        model = "6mer_DNAbert"
+    elif config.type == 'RNA':
+        model = "MutiRM"
+
+
 def gpu_test():
     config = config_init.get_config()
 
@@ -190,9 +243,12 @@ def gpu_test():
     config.if_same = True
     # SL_train(config, ["LSTM", "TransformerEncoder"])
     # SL_train(config, ["TransformerEncoder"])
-    SL_train(config, ["TextCNN", "LSTM", "TransformerEncoder"])
+    # SL_train(config, ["LSTMAttention", "BiLSTM", "VDCNN", "6mer_DNAbert"])
+    # SL_train(config, ["6mer_DNAbert", "LSTMAttention"])
+    SL_train(config, ["LSTMAttention"])
     # SL_train(config, ["TextGCN"])
     # SL_train(config, ["TextRCNN", "BiLSTM", "6mer_DNAbert", "LSTM", "VDCNN", "LSTMAttention", "Reformer_Encoder", "Performer_Encoder"])
+
 
 def server_use():
     model_all = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
@@ -258,7 +314,7 @@ def server_use():
             path_data = "http://server.wei-group.net" + '/result/' + config.learn_name + '/plot/'
             for root, dirs, files in os.walk(config.path_save + '/' + config.learn_name + '/plot'):
                 print("files", files)  # 当前路径下所有非目录子文件
-                pictureArray = [path_data + i for i in files ]
+                pictureArray = [path_data + i for i in files]
 
             # for model in models:
             #     pictureArray.append(
@@ -271,7 +327,7 @@ def server_use():
             }
 
         elif config.mode == 'annotation':
-            if config.type == 'DNA' or 'RNA':
+            if config.type == 'DNA' or config.type == 'RNA':
 
                 if config.minimode == 'chooseID':
                     jobID = int(setting["jobID"])
@@ -290,6 +346,8 @@ def server_use():
                 elif config.minimode == 'default':
                     config.predictType = setting['predicttype']
 
+                    tabel_data = default_predict(config)
+
             elif config.type == 'protein':
                 pass
 
@@ -300,6 +358,7 @@ def server_use():
         requests.post(requests_url, util_json.get_json(config.learn_name, -1))
 
     # SL_train(config, models)
+
 
 if __name__ == '__main__':
     # server_use()
