@@ -38,11 +38,12 @@ class TransformerEncoder(nn.Module):
     def forward(self, x):
         x = x.cuda()
 
-        # padding_mask = get_attn_pad_mask(x).permute(1, 0)
-        # src_key_padding_mask = padding_mask
+        # padding_mask = get_attn_pad_mask(x).permute(1,0)
+        # print(x.shape)
         x = self.embedding(x)
-        representation = self.transformer_encoder(x,)[:, 0, :].squeeze(1)
-        # representation = self.transformer_encoder(x, src_key_padding_mask=src_key_padding_mask)
+        # src_key_padding_mask = padding_mask
+        # representation = self.transformer_encoder(x,)[:, 0,:].squeeze(1)
+        representation = self.transformer_encoder(x,)
         representation = representation.view(representation.shape[0], -1)
         representation = self.fnn(representation)
         # print(representation.shape)

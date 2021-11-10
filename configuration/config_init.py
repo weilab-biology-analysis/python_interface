@@ -12,7 +12,7 @@ def get_config():
     parse.add_argument('-threshold', type=float, default=0.60, help='准确率阈值')
     parse.add_argument('-cuda', type=bool, default=True)
     # parse.add_argument('-cuda', type=bool, default=False)
-    parse.add_argument('-device', type=int, default=3)
+    parse.add_argument('-device', type=int, default=2)
     parse.add_argument('-seed', type=int, default=43)
     parse.add_argument('-num_workers', type=int, default=4)
     parse.add_argument('-num_class', type=int, default=2)
@@ -20,8 +20,8 @@ def get_config():
 
     # 路径参数
     # parse.add_argument('-path-data', type=str, default='../data/test.txt', help='训练数据的位置')
-    parse.add_argument('-path-data', type=str, default='../data/6mA_R.chinensis.txt', help='训练数据的位置')
-    # parse.add_argument('-path-data', type=str, default='/home/wrh/weilab_server/python_interface/data/test.txt', help='训练数据的位置')
+    # parse.add_argument('-path-data', type=str, default='../data/6mA_R.chinensis.txt', help='训练数据的位置')
+    parse.add_argument('-path-data', type=str, default='/home/wrh/weilab_server/python_interface/data/test.txt', help='训练数据的位置')
     parse.add_argument('-path-params', type=str, default=None, help='模型参数路径')
     # parse.add_argument('-path-params', type=str, default='../result/SL_train_00/BERT, MCC[0.60].pt', help='模型参数路径')
     parse.add_argument('-model-save-name', type=str, default='model', help='保存模型的命名')
@@ -32,6 +32,7 @@ def get_config():
     parse.add_argument('-mode', type=str, default='train-test', help='训练模式')
     parse.add_argument('-type', type=str, default='DNA', help='分子名称')
     parse.add_argument('-model', type=str, default='3mer_DNAbert', help='预训练模型名称')
+    parse.add_argument('-datatype', type=str, default='userprovide', help='annotation部分数据提供源')
 
     # parse.add_argument('-if-MIM', type=bool, default=True)
     parse.add_argument('-if-MIM', type=bool, default=False)

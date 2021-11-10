@@ -73,7 +73,7 @@ class DataManager():
                 self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
             elif self.config.type == 'RNA':
                 self.token2index = pickle.load(open('../data/statistic/RNAtoken2index.pkl', 'rb'))
-            elif self.config.type == 'protein':
+            elif self.config.type == 'prot':
                 self.token2index = pickle.load(open('../data/statistic/proteintoken2index.pkl', 'rb'))
             self.train_dataloader = self.construct_dataset_with_same_len(self.train_dataset, self.train_label, self.config.cuda,
                                                            self.config.batch_size)
@@ -91,18 +91,29 @@ class DataManager():
             self.token2index = pickle.load(open('../data/statistic/DNAtoken2index.pkl', 'rb'))
         elif self.config.type == 'RNA':
             self.token2index = pickle.load(open('../data/statistic/RNAtoken2index.pkl', 'rb'))
-        elif self.config.type == 'protein':
+        elif self.config.type == 'prot':
             self.token2index = pickle.load(open('../data/statistic/proteintoken2index.pkl', 'rb'))
 
         if self.config.datatype == 'userprovide':
             self.test_dataset = util_file.load_test_fasta(self.config.path_data)
+            # self.config.max_len_ = 51
+            print("self.config.max_len: ", self.config.max_len)
+            print("seq_len: ", len(self.test_dataset[0]))
             for seq in self.test_dataset:
+                if self.config.model in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
+                    pos_index = len(seq) - self.config.max_len + 1
+                else:
+                    pos_index = len(seq) - self.config.max_len + 2
                 seqcut = 0
-                for pos in range(len(seq)-self.config.max_len+1):
-                    seqcut = + seqcut
+                for pos in range(pos_index):
+                    seqcut += 1
                     seq_cut_origin = seq[pos:pos + self.config.max_len]
-                    seq_index = [self.token2index[token] for token in seq_cut_origin]
-                    self.predict_data.append(seq_index)
+                    if self.config.model in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
+                        self.predict_data.append(seq_cut_origin)
+                    else:
+                        seq_index = [self.token2index['[CLS]']] + [self.token2index[token] for token in seq_cut_origin]
+                        self.predict_data.append(seq_index)
+
                 self.predict_num.append(seqcut)
         elif self.config.datatype == 'gene':
             pass
@@ -116,6 +127,7 @@ class DataManager():
             labels = torch.cuda.LongTensor(labels)
         else:
             labels = torch.LongTensor(labels)
+        self.config.max_len = len(sequences[0])
         dataset = MyDataSet(sequences, labels)
         data_loader = Data.DataLoader(dataset,
                                       batch_size=batch_size,
