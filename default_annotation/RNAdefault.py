@@ -4,36 +4,53 @@ import pandas as pd
 import numpy as np
 
 from model import MutiRM
+from util import util_file
 
-def main(seqs):
-    RMs = ['Am', 'Cm', 'Gm', 'Um', 'm1A', 'm5C', 'm5U', 'm6A', 'm6Am', 'm7G', 'Psi', 'AtoI']
-
-    num_task = 12
-    top = 3
-    alpha = 0.1
-    att_window = 5 # motif的查找窗口
-    verbose = False
-    original_length = len(seqs)
-    check_pos = original_length - 51 + 1
-
-    model = MutiRM.model_v3(num_task=num_task, use_embedding=True).cuda()
+def main(config, choiceid):
+    model = MutiRM.model_v3(num_task=12, use_embedding=True).cuda()
     model.load_state_dict(torch.load('../pretrain/Muti_RM/trained_model_51seqs.pkl'))
 
     neg_prob = pd.read_csv('../pretrain/Muti_RM/neg_prob.csv', header=None, index_col=0)
+
+    embeddings_dict = pickle.load(open('../pretrain/Muti_RM/embeddings_12RM.pkl', 'rb'))
+
+    problist = []
+    attentionlist = []
+
+    seqs = util_file.load_test_fasta(config.path_data)
+
+    for i, seq in enumerate(seqs):
+        logits_data_all, motif_all = motif(model, neg_prob, embeddings_dict, seq, i, choiceid)
+        problist.extend(logits_data_all)
+        attentionlist.extend(motif_all)
+
+    return  problist, attentionlist
+
+def motif(model, neg_prob, embeddings_dict, seq, seqid, choiceid):
+    RMs = ['Am', 'Cm', 'Gm', 'Um', 'm1A', 'm5C', 'm5U', 'm6A', 'm6Am', 'm7G', 'Psi', 'AtoI']
+
+    num_task = 12
+    top = 1
+    alpha = 0.1
+    att_window = 3  # motif的查找窗口
+    verbose = False
+    original_length = len(seq)
+    check_pos = original_length - 51 + 1
+
+    logits_data_all = []
+    motif_all = []
 
     probs = np.zeros((num_task, check_pos))
     p_values = np.zeros((num_task, check_pos))
     labels = np.zeros((num_task, original_length))
     attention = np.zeros((num_task, original_length))
 
-    embeddings_dict = pickle.load(open('../pretrain/Muti_RM/embeddings_12RM.pkl', 'rb'))
-
     str_out = []
-    print('*' * 24 + 'Reporting' + '*' * 24)
+    # print('*' * 24 + 'Reporting' + '*' * 24)
     str_out.append('*' * 24 + 'Reporting' + '*' * 24)
 
     for pos in range(original_length - 51 + 1):
-        cutted_seqs = seqs[pos:pos + 51]
+        cutted_seqs = seq[pos:pos + 51]
         # print(cutted_seqs) "CCTCTGAACCCCCAACACTCTGGCCCATCGGGGTGACGGATATCTGCTTTT"
 
         seqs_kmers_index = seq2index([cutted_seqs], embeddings_dict)
@@ -55,19 +72,21 @@ def main(seqs):
         y_prob = [y_pred.detach().cpu().numpy()[0] for y_pred in y_preds]
         # print(y_prob) [9.1686576e-05, 0.096862465, 8.476671e-11, 5.7640124e-09, 0.0001716252, 0.097024314, 1.2085323e-09, 7.677543e-15, 1.6960197e-06, 3.6529174e-12, 1.1735641e-08, 1.3682374e-05]
 
-        for k in range(num_task):
-            bool = neg_prob.iloc[k, :] > y_prob[k]
+        # for k in range(num_task):
+        bool = neg_prob.iloc[choiceid, :] > y_prob[choiceid]
 
-            p_value = np.sum(bool) / len(bool)
+        p_value = np.sum(bool) / len(bool)
 
-            if p_value < alpha:
-                labels[k, pos + 25] = 1
-            p_values[k, pos] = p_value
-            probs[k, pos] = y_prob[k]
+        if p_value < alpha:
+            labels[choiceid, pos + 25] = 1
+            logits_data_all.append([seqid, pos + 25, y_prob[choiceid]])
+
+        p_values[choiceid, pos] = p_value  # 标签
+        probs[choiceid, pos] = y_prob[choiceid]  # 相应的y_prob值
 
         index_list = [i for i, e in enumerate(labels[:, pos + 25]) if e == 1]
         # print(labels)
-        print(index_list)
+        # print(index_list)
         if index_list == []:
             if verbose:
                 sentense = 'There is no modification site at %d ' % (pos + 26)
@@ -77,7 +96,7 @@ def main(seqs):
             for idx in index_list:
                 if verbose:
                     sentense = '%s is predicted at %d with p-value %.4f and alpha %.3f' % (
-                        RMs[idx], pos + 26, p_values[idx, pos], args.alpha)
+                        RMs[idx], pos + 26, p_values[idx, pos], alpha)
                     print(sentense)
                     str_out.append(sentense)
 
@@ -100,6 +119,18 @@ def main(seqs):
 
                     attention[idx, start + edge:end + edge + 1] = 1
 
+    # print(attention)
+    # print(labels)
+    # print(probs)
+    print(logits_data_all)
+    for i in range(2, len(seq) - 2):
+        if attention[choiceid][i] == 1:
+            motif_all.append([seqid, i - 2, i + 2, seq[i - 2, i + 2]])
+            attention[choiceid][i - 2, i + 2] = 0
+
+    return logits_data_all, motif_all
+
+
 def word2index_(my_dict):
     word2index = dict()
     for index, ele in enumerate(list(my_dict.keys())):
@@ -107,13 +138,15 @@ def word2index_(my_dict):
 
     return word2index
 
-def mapfun(x,my_dict):
+
+def mapfun(x, my_dict):
     if x not in list(my_dict.keys()):
         return None
     else:
         return word2index_(my_dict)[x]
 
-def seq2index(seqs,my_dict,window=3,save_data=False):
+
+def seq2index(seqs, my_dict, window=3, save_data=False):
     """
     Convert single RNA sequences to k-mers representation.
         Inputs: ['ACAUG','CAACC',...] of equal length RNA seqs
@@ -124,22 +157,21 @@ def seq2index(seqs,my_dict,window=3,save_data=False):
     temp = []
     for k in range(num_samples):
         length = len(seqs[k])
-        seqs_kmers = [seqs[k][i:i+window] for i in range(0,length-window+1)]
+        seqs_kmers = [seqs[k][i:i + window] for i in range(0, length - window + 1)]
         temp.append(seqs_kmers)
 
-
-    seq_kmers = pd.DataFrame(data = np.concatenate(temp,axis=0))
+    seq_kmers = pd.DataFrame(data=np.concatenate(temp, axis=0))
 
     # load pretained word2vec embeddings
 
     word2index = word2index_(my_dict)
 
-    seq_kmers_index = seq_kmers.applymap(lambda x: mapfun(x,my_dict))
-
+    seq_kmers_index = seq_kmers.applymap(lambda x: mapfun(x, my_dict))
 
     return seq_kmers_index.to_numpy()
 
-def evaluate(model, input_x,model_path=None):
+
+def evaluate(model, input_x, model_path=None):
     """
     Calculate the attention weights and predicted probabilities
     """
@@ -149,11 +181,12 @@ def evaluate(model, input_x,model_path=None):
 
     y_pred = model(input_x)
     x = model.embed(input_x)
-    output,(h_n,c_n) = model.NaiveBiLSTM(x)
-    h_n = h_n.view(-1,output.size()[-1])
-    context_vector,attention_weights = model.Attention(h_n,output)
+    output, (h_n, c_n) = model.NaiveBiLSTM(x)
+    h_n = h_n.view(-1, output.size()[-1])
+    context_vector, attention_weights = model.Attention(h_n, output)
 
     return attention_weights, y_pred
+
 
 def cal_attention(total_attention_weights):
     """
@@ -161,38 +194,40 @@ def cal_attention(total_attention_weights):
         Inputs: Attention weights shape [batch_size, length, num_class]
         Outputs: Unwarped Attention weights shape [batch_size, num_class, length+2]
     """
-    num_class = total_attention_weights.shape[-1] # 12
-    length = total_attention_weights.shape[1] + 2 # 3-mers输入要加2
+    num_class = total_attention_weights.shape[-1]  # 12
+    length = total_attention_weights.shape[1] + 2  # 3-mers输入要加2
     num_samples = total_attention_weights.shape[0]
-    total_attention = np.zeros((num_samples,num_class,length)) # (1*12*50)
+    total_attention = np.zeros((num_samples, num_class, length))  # (1*12*50)
     for k in range(num_samples):
         tmp = []
         for i in range(num_class):
-            tmp.append(cal_attention_every_class(total_attention_weights[k,:,i].detach().cpu().numpy()))
-        tmp = np.concatenate(tmp,axis=0)
+            tmp.append(cal_attention_every_class(total_attention_weights[k, :, i].detach().cpu().numpy()))
+        tmp = np.concatenate(tmp, axis=0)
 
-        total_attention[k,:] = tmp
+        total_attention[k, :] = tmp
     return total_attention
+
 
 def cal_attention_every_class(attention_weights):
     length = attention_weights.shape[0]
-    attention = np.zeros((1,length+2))
-    for i in range(length+2):
+    attention = np.zeros((1, length + 2))
+    for i in range(length + 2):
         # unravel 3-mers attention
         if i == 0:
-            attention[:,0] = attention_weights[0]
+            attention[:, 0] = attention_weights[0]
         elif i == 1:
-            attention[:,1] = attention_weights[0] + attention_weights[1]
-        elif i == length +1:
-            attention[:,i] = attention_weights[i-2]
+            attention[:, 1] = attention_weights[0] + attention_weights[1]
+        elif i == length + 1:
+            attention[:, i] = attention_weights[i - 2]
         elif i == length:
-            attention[:,i] = attention_weights[i-2] + attention_weights[i-1]
+            attention[:, i] = attention_weights[i - 2] + attention_weights[i - 1]
         else:
-            attention[:,i] = attention_weights[i-2]+attention_weights[i-1]+attention_weights[i]
+            attention[:, i] = attention_weights[i - 2] + attention_weights[i - 1] + attention_weights[i]
 
     return attention
 
-def highest_x(a,w,p=1):
+
+def highest_x(a, w, p=1):
     """
     Inputs:
         a: a 1-D numpy array contains the scores of each position
@@ -200,9 +235,9 @@ def highest_x(a,w,p=1):
         p: length of padding when maximum sum of consecutive numbers are taken
     """
 
-    lists = [{k:v for (k,v) in zip(range(len(a)),a)}]
+    lists = [{k: v for (k, v) in zip(range(len(a)), a)}]
     result = {}
-    max_idx = len(a) -1
+    max_idx = len(a) - 1
     count = 1
     condition = [True]
     while any(con is True for con in condition):
@@ -214,37 +249,32 @@ def highest_x(a,w,p=1):
             values = list(ele.values())
             idx = list(ele.keys())
 
-
             start_idx = idx[0]
 
             if len(values) >= w:
-                highest, highest_idx_start, highest_idx_end = highest_score(values,w)
+                highest, highest_idx_start, highest_idx_end = highest_score(values, w)
 
-                starts.append(highest_idx_start+start_idx)
+                starts.append(highest_idx_start + start_idx)
 
-
-                ends.append(highest_idx_end+start_idx)
-
+                ends.append(highest_idx_end + start_idx)
 
                 bests.append(highest)
 
-
-        best_idx = max(zip(bests, range(len(bests))))[1]   # calculate the index of maximum sum
+        best_idx = max(zip(bests, range(len(bests))))[1]  # calculate the index of maximum sum
 
         cut_value = bests[best_idx]
 
-        if starts[best_idx] - p >=0:
+        if starts[best_idx] - p >= 0:
             cut_idx_start = starts[best_idx] - p
         else:
             cut_idx_start = 0
 
-        if ends[best_idx] + p <=max_idx:
+        if ends[best_idx] + p <= max_idx:
             cut_idx_end = ends[best_idx] + p
         else:
             cut_idx_end = max_idx
 
-        result[count] = (cut_value,starts[best_idx],ends[best_idx])
-
+        result[count] = (cut_value, starts[best_idx], ends[best_idx])
 
         copy = lists.copy()
 
@@ -257,30 +287,30 @@ def highest_x(a,w,p=1):
             if len(values) < w:
                 copy.remove(ele)
             else:
-#                 print(cut_idx_start,cut_idx_end)
-#                 print(start_idx,end_idx)
-#                 print(values)
+                #                 print(cut_idx_start,cut_idx_end)
+                #                 print(start_idx,end_idx)
+                #                 print(values)
                 if (cut_idx_end < start_idx) or (cut_idx_start > end_idx):
 
                     pass
                 elif (cut_idx_start < start_idx) and (cut_idx_end >= start_idx):
                     copy.remove(ele)
-                    values = values[cut_idx_end-start_idx+1:]
-                    idx = idx[cut_idx_end-start_idx+1:]
-                    ele = {k:v for (k,v) in zip(idx,values)}
+                    values = values[cut_idx_end - start_idx + 1:]
+                    idx = idx[cut_idx_end - start_idx + 1:]
+                    ele = {k: v for (k, v) in zip(idx, values)}
 
                     if ele != {}:
                         copy.append(ele)
 
                 elif (cut_idx_start >= start_idx) and (cut_idx_end <= end_idx):
                     copy.remove(ele)
-                    values_1 = values[:cut_idx_start-start_idx]
-                    idx_1 = idx[:cut_idx_start-start_idx]
-                    ele_1 = {k:v for (k,v) in zip(idx_1,values_1)}
+                    values_1 = values[:cut_idx_start - start_idx]
+                    idx_1 = idx[:cut_idx_start - start_idx]
+                    ele_1 = {k: v for (k, v) in zip(idx_1, values_1)}
 
-                    values_2 = values[cut_idx_end-start_idx+1:]
-                    idx_2 = idx[cut_idx_end-start_idx+1:]
-                    ele_2 = {k:v for (k,v) in zip(idx_2,values_2)}
+                    values_2 = values[cut_idx_end - start_idx + 1:]
+                    idx_2 = idx[cut_idx_end - start_idx + 1:]
+                    ele_2 = {k: v for (k, v) in zip(idx_2, values_2)}
 
                     if ele_1 != {}:
                         copy.append(ele_1)
@@ -289,38 +319,44 @@ def highest_x(a,w,p=1):
 
                 elif (cut_idx_start <= end_idx) and (cut_idx_end > end_idx):
                     copy.remove(ele)
-                    values = values[:cut_idx_start-start_idx]
-                    idx = idx[:cut_idx_start-start_idx]
-                    ele = {k:v for (k,v) in zip(idx,values)}
+                    values = values[:cut_idx_start - start_idx]
+                    idx = idx[:cut_idx_start - start_idx]
+                    ele = {k: v for (k, v) in zip(idx, values)}
 
                     if ele != {}:
                         copy.append(ele)
 
         lists = copy
-#        print(lists)
+        #        print(lists)
         count = count + 1
-        condition = [len(i)>=w for i in lists]
-#        print(condition)
+        condition = [len(i) >= w for i in lists]
+    #        print(condition)
 
     return result
 
-def highest_score(a,w):
+
+def highest_score(a, w):
     """
     Inputs:
         a: a 1-D numpy array contains the scores of each position
         w: length of window to aggregate the scores
     """
 
-    assert(len(a)>=w)
+    assert (len(a) >= w)
 
     best = -20000
     best_idx_start = 0
-    best_idx_end =0
-    for i in range(len(a)-w + 1):
-        tmp = np.sum(a[i:i+w])
+    best_idx_end = 0
+    for i in range(len(a) - w + 1):
+        tmp = np.sum(a[i:i + w])
         if tmp > best:
             best = tmp
             best_idx_start = i
             best_idx_end = i + w - 1
 
     return best, best_idx_start, best_idx_end
+
+
+if __name__ == '__main__':
+    # main("CCTCTGAACCCCCAACACTCTGGCCCATCGGGGTGACGGATATCTGCTTTT",1 ,3)
+    motif("CCTCTGAACCCCCAACACTCTGGCCCATCGGGGTGACGGATATCTGCTTTTTAAAAATTTTCTTTTTTTGGCCCATCGGGGCTTCGGATA", 1, 2)

@@ -6,10 +6,6 @@ from transformers import BertTokenizer, BertConfig, BertModel
 import sys
 import os
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
 # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 # model = BertModel.from_pretrained("bert-base-uncased")
 
@@ -48,36 +44,9 @@ class BERT(nn.Module):
         # print(token_seq)
         input_ids, token_type_ids, attention_mask = token_seq['input_ids'], token_seq['token_type_ids'], token_seq[
             'attention_mask']
-        if self.config.cuda:
-            representation = self.bert(input_ids.cuda(), token_type_ids.cuda(), attention_mask.cuda())
-        else:
-            representation = self.bert(input_ids, token_type_ids, attention_mask)
+
+        representation = self.bert(input_ids.cuda(), token_type_ids.cuda(), attention_mask.cuda())
 
         output = self.classification(representation["pooler_output"])
 
         return output, representation
-
-
-
-if __name__ == '__main__':
-    import argparse
-
-    parse = argparse.ArgumentParser(description='common meta learning config')
-    parse.add_argument('-kmer', type=int, default=6)
-    config = parse.parse_args()
-
-    model = BERT(config).cuda()
-
-    # x = ('TTTAACGATATAACAATCCCAGATTCACAAAGAGATGACCT', 'TGTGTAAGGCGCGTGAACATAGGAAGGAGAAAGCTCGAAGG','TTGATTATACCATTTCAACCATTCAAAGAAGTGCAGATGAT')
-    x = ('TTTAAC', 'TTTAAC')
-
-    # encoded_input = tokenizer("AAAAAA", return_tensors='pt')
-    # output = model(**encoded_input)
-    # tokens = tokenizer.tokenize("CTTGTT")
-    model.train()
-    output = model(x)
-    # print(encoded_input)
-    # ids = torch.tensor([tokenizer.convert_tokens_to_ids(tokens)])
-    # print(ids)
-    # output  = model(**encoded_input)
-    # print(output)
