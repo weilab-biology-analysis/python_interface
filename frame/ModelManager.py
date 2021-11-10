@@ -34,7 +34,7 @@ class ModelManager():
 
     def init_model(self):
         # Todo
-        if self.mode == 'train-test':
+        if self.mode == 'train-test' or self.mode == 'annotation':
             if self.config.model in ["3mer_DNAbert","4mer_DNAbert","5mer_DNAbert","6mer_DNAbert"]:
                 self.model = DNAbert.BERT(self.config)
             elif self.config.model == 'prot_bert_bfd' or self.config.model == 'prot_bert':
@@ -85,7 +85,7 @@ class ModelManager():
 
     def load_params(self):
         if self.config.path_params:
-            if self.mode == "train-test":
+            if self.mode == "train-test" or self.mode == "annotation":
                 self.model = self.__load_params(self.model, self.config.path_params)
             else:
                 self.IOManager.log.Error('No Such Mode')
@@ -592,25 +592,25 @@ class ModelManager():
         return performance, avg_test_loss, ROC_data, PRC_data, repres_list, label_list, pos_list, neg_list
 
     def __predict(self, predict_data, predict_num):
-        # predict_num 是以要预测的seq数量
         logits_data_all = []
 
         self.model.eval()
         # for seq in predict_data:
+        predict_data = torch.LongTensor(predict_data)
         logits, _ = self.model(predict_data)
 
         pred_prob_all = F.softmax(logits, dim=1)  # 预测概率 [batch_size, class_num]
-
         pred_prob_sort = torch.max(pred_prob_all, 1)  # 每个样本中预测的最大的概率 [batch_size]
         pred_class = pred_prob_sort[1]  # 每个样本中预测的最大的概率所在的位置（类别） [batch_size]
-
+        # print("pred_class: ", pred_class)
         count_sum = 0
+        # print("predict_num: ", predict_num)
         for index, count in enumerate(predict_num):
             for i in range(count):
                 if pred_class[i + count_sum] == 1:
                     # 第几个序列， 在这条序列的第几个位置上， 置信度
-                    logits_data_all.append([index, i, pred_prob_all[i + count_sum][1]])
-            count_sum = +count
+                    logits_data_all.append([index, i+self.config.max_len//2, float(pred_prob_all[i + count_sum][1])])
+            count_sum += count
 
         return logits_data_all
 

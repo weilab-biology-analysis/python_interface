@@ -75,6 +75,7 @@ def SL_train(config, modelsORpara):
                    'fasta_list': [savepath + '/train_positive.txt', savepath + '/train_negative.txt',
                                   savepath + '/test_positive.txt', savepath + '/test_negative.txt']}
 
+
     for index, model in enumerate(modelsORpara):
         # print(models)
         if config.minimode == 'paramCompare':
@@ -251,6 +252,7 @@ def gpu_test():
 
 
 def server_use():
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
     model_all = ["DNN", "RNN", "LSTM", "BiLSTM", "LSTMAttention", "GRU", "TextCNN", "TextRCNN", "VDCNN", "RNN_CNN",
                  "TransformerEncoder", "Reformer_Encoder", "Performer_Encoder", "Linformer_Encoder",
                  "RoutingTransformer_Encoder", "6mer_DNAbert", "prot_bert", "TextGCN"]
@@ -277,89 +279,87 @@ def server_use():
     config.minimode = setting["minimode"]
     config.type = setting["type"]
     config.if_same = True
-
-    os.mkdir(config.path_save + '/' + config.learn_name)
+    if not os.path.exists(config.path_save + '/' + config.learn_name):
+        os.mkdir(config.path_save + '/' + config.learn_name)
 
     requests.post(requests_url, util_json.get_json(config.learn_name, 1))
 
-    try:
-        if config.mode == "train-test":
-            # a = '01234'
-            # list(a)
-            # Out[6]: ['0', '1', '2', '3', '4']
-            if config.minimode == 'paramCompare':
-                config.paramCompare = setting['paramCompare']
-                config.model = model_all[int(setting['paramCompareModel'])]
-                if config.paramCompare == "CDHit":
-                    CDHitlist = list(setting['CDHit'])
-                    models = [i / 10 for i in CDHitlist]
+    # try:
+    if config.mode == "train-test":
+        # a = '01234'
+        # list(a)
+        # Out[6]: ['0', '1', '2', '3', '4']
+        if config.minimode == 'paramCompare':
+            config.paramCompare = setting['paramCompare']
+            config.model = model_all[int(setting['paramCompareModel'])]
+            if config.paramCompare == "CDHit":
+                CDHitlist = list(setting['CDHit'])
+                models = [i / 10 for i in CDHitlist]
 
-            elif config.minimode == 'modelCompare':
-                modelchoice = setting["modelCompare"].split(' ')
-                models = []
-                for choice in modelchoice:
-                    print(choice)
-                    models.append(model_all[int(choice)])
+        elif config.minimode == 'modelCompare':
+            modelchoice = setting["modelCompare"].split(' ')
+            models = []
+            for choice in modelchoice:
+                print(choice)
+                models.append(model_all[int(choice)])
 
-            table_data = SL_train(config, models)
+        table_data = SL_train(config, models)
 
-            # resultdir = '/data/result/' + config.learn_name
-            # zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
-            # # 把zfile整个目录下所有内容，压缩为new.zip文件
-            # zip_file.write(resultdir, compress_type=zipfile.ZIP_DEFLATED)
-            # zip_file.close()
+        # resultdir = '/data/result/' + config.learn_name
+        # zip_file = zipfile.ZipFile(resultdir + 'zipdir' + '.zip', 'w')
+        # # 把zfile整个目录下所有内容，压缩为new.zip文件
+        # zip_file.write(resultdir, compress_type=zipfile.ZIP_DEFLATED)
+        # zip_file.close()
 
-            # pictureArray = {}
+        # pictureArray = {}
 
-            path_data = "http://server.wei-group.net" + '/result/' + config.learn_name + '/plot/'
-            for root, dirs, files in os.walk(config.path_save + '/' + config.learn_name + '/plot'):
-                print("files", files)  # 当前路径下所有非目录子文件
-                pictureArray = [path_data + i for i in files]
+        path_data = "http://server.wei-group.net" + '/result/' + config.learn_name + '/plot/'
+        for root, dirs, files in os.walk(config.path_save + '/' + config.learn_name + '/plot'):
+            print("files", files)  # 当前路径下所有非目录子文件
+            pictureArray = [path_data + i for i in files ]
 
             # for model in models:
             #     pictureArray.append(
             #         "http://server.wei-group.net" + '/result/' + config.learn_name + '/' + model + 'mer/t-sne.png')
 
-            result = {
-                # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
-                "pictures": pictureArray,
-                "tabel_data": table_data
-            }
+        result = {
+            # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
+            "pictures": pictureArray,
+            "tabel_data": table_data
+        }
 
-        elif config.mode == 'annotation':
-            if config.type == 'DNA' or config.type == 'RNA':
+    elif config.mode == "annotation":
+        if config.type == 'DNA' or config.type == 'RNA':
+            if config.minimode == 'chooseID':
+                jobID = str(setting["jobId"])
+                config.model = model_all[int(setting["model"])]
+                if config.model in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
+                    name = 'DNAbert'
+                else:
+                    name = config.model
+                table_data = SL_test(setting, jobID, name, config.model)
+                print("tabel_data: ", table_data)
+                result = {
+                    # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
+                    "tabel_data": table_data
+                }
 
-                if config.minimode == 'chooseID':
-                    jobID = int(setting["jobID"])
-                    config.model = model_all[int(setting["model"])]
-                    if config.model in ["3mer_DNAbert", "4mer_DNAbert", "5mer_DNAbert", "6mer_DNAbert"]:
-                        name = 'DNAbert'
-                    else:
-                        name = config.model
-                    table_data = SL_test(setting, jobID, name, config.model)
+            elif config.minimode == 'default':
+                config.predictType = setting['predicttype']
 
-                    result = {
-                        # "zip": "http://server.wei-group.net" + '/result/' + config.learn_name + 'zipdir' + '.zip',
-                        "tabel_data": table_data
-                    }
+                tabel_data = default_predict(config)
 
-                elif config.minimode == 'default':
-                    config.predictType = setting['predicttype']
+        elif config.type == 'prot':
+            pass
 
-                    tabel_data = default_predict(config)
+    postget = requests.post(requests_url, util_json.get_json(config.learn_name, 2, json.dumps(result)))
+    print(postget.text)
+    # except Exception as e:
+    #     print(e)
+    #     requests.post(requests_url, util_json.get_json(config.learn_name, -1))
 
-            elif config.type == 'protein':
-                pass
-
-        postget = requests.post(requests_url, util_json.get_json(config.learn_name, 2, json.dumps(result)))
-        print(postget.text)
-    except Exception as e:
-        print(e)
-        requests.post(requests_url, util_json.get_json(config.learn_name, -1))
-
-    # SL_train(config, models)
-
+        # SL_train(config, models)
 
 if __name__ == '__main__':
-    # server_use()
-    gpu_test()
+    server_use()
+    # gpu_test()
