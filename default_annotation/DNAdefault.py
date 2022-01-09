@@ -6,17 +6,20 @@ import pandas as pd
 import numpy as np
 
 from model import motifDNAbert
+from util import util_file
 
-def main(seqs, detectTypechoice):
+def main(config, choiceid):
+
+    seqs = util_file.load_test_fasta(config.path_data)
     detectType = ['6mA', '5mC', '4mC']
 
     model = motifDNAbert.BERT().cuda()
 
-    if detectTypechoice == 1:
+    if choiceid == 1:
         model.load_state_dict(torch.load('../pretrain/Muti_RM/trained_model_51seqs.pkl'))
-    elif detectTypechoice == 2:
+    elif choiceid == 2:
         model.load_state_dict(torch.load('../pretrain/Muti_RM/trained_model_51seqs.pkl'))
-    elif detectTypechoice == 3:
+    elif choiceid == 3:
         model.load_state_dict(torch.load('../pretrain/Muti_RM/trained_model_51seqs.pkl'))
 
     problist = []

@@ -137,7 +137,7 @@ def draw_hist_image(train_data, test_data, config):
                                           'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
                                           'T', 'W', 'Y', 'V'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'prot_train_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'prot_train_statistics', 'png'))
     # plt.show()
 
     keyvalueP['A'] = 0
@@ -220,7 +220,7 @@ def draw_hist_image(train_data, test_data, config):
                                           'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
                                           'T', 'W', 'Y', 'V'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'prot_test_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'prot_test_statistics', 'png'))
     # plt.show()
 
 
@@ -275,7 +275,7 @@ def draw_dna_hist_image(train_data, test_data, config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_train_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_train_statistics', 'png'))
     # plt.show()
 
     keyvalueP = {}
@@ -328,7 +328,7 @@ def draw_dna_hist_image(train_data, test_data, config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'T', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_test_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'dna_test_statistics', 'png'))
     # plt.show()
 
 
@@ -383,7 +383,7 @@ def draw_rna_hist_image(train_data, test_data, config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'U', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'rna_train_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'rna_train_statistics', 'png'))
     # plt.show()
 
     keyvalueP = {}
@@ -436,7 +436,7 @@ def draw_rna_hist_image(train_data, test_data, config):
     plt.legend(frameon=False)
     plt.xticks(np.arange(4) + 20 + 0.2, ('A', 'U', 'C', 'G'),
                fontsize=11)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], config.learn_name, 'rna_test_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], config.learn_name, 'rna_test_statistics', 'png'))
     # plt.show()
 
 
@@ -574,7 +574,7 @@ def draw_dna_rna_prot_length_distribution_image(train_data, test_data, config):
     ax.legend()
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], config['type'] + '_train_length_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], config['type'] + '_train_length_statistics', 'png'))
     # plt.show()
     pos = []
     neg = []
@@ -627,7 +627,7 @@ def draw_dna_rna_prot_length_distribution_image(train_data, test_data, config):
     ax.legend()
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    plt.savefig('{}/{}.{}'.format(config['savepath'], config['type'] + '_test_length_statistics', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], config['type'] + '_test_length_statistics', 'png'))
     # plt.show()
 
 
@@ -652,13 +652,16 @@ def draw_ROC_PRC_curve(roc_datas, prc_datas, config):
                  label=config['names'][index] + ' (AUC = %0.3f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
     # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.0])
     plt.xticks(size=14)
     plt.yticks(size=14)
-    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 18})
-    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 18})
-    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(frameon=False, loc="lower right", prop={'weight': 'normal', 'size': 14})
+    plt.xlabel('False Positive Rate',labelpad=4.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.ylabel('True Positive Rate',labelpad=8.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 20})
+    leg = plt.legend(frameon=False, loc="lower right", prop={'weight': 'normal', 'size': 16})
+    # set the linewidth of each legend object
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(3.0)
 
     plt.subplot(1, 2, 2)
     ax2.spines['right'].set_visible(False)
@@ -670,18 +673,22 @@ def draw_ROC_PRC_curve(roc_datas, prc_datas, config):
         plt.plot(prc_data[0], y, color=colorlocal[index],
                  lw=lw, label=config['names'][index] + ' (AP = %0.3f)' % prc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
 
+
     plt.xticks(size=14)
     plt.yticks(size=14)
-    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 18})
-    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 18})
+    plt.xlabel('Recall',labelpad=4.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.ylabel('Precision', labelpad=8.5, fontdict={'weight': 'normal', 'size': 16})
     # plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.0])
     plt.xlim([0.0, 1.0])
-    plt.title('PR curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(frameon=False, loc="lower left", prop={'weight': 'normal', 'size': 14})
+    plt.title('Precision-Recall curve', fontdict={'weight': 'normal', 'size': 20})
+    leg = plt.legend(frameon=False, loc="lower left", prop={'weight': 'normal', 'size': 16})
+    # set the linewidth of each legend object
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(3.0)
 
     plt.savefig(
-        '{}/{}.{}'.format(config['savepath'], 'ROC_PRC', 'jpg'))
+        '{}/{}.{}'.format(config['savepath'], 'ROC_PRC', 'png'))
     # plt.show()
 
 
@@ -708,13 +715,16 @@ def draw_tra_ROC_PRC_curve(roc_datas, prc_datas, config):
                  label=config['tra_name'][index] + ' (AUC = %0.3f)' % roc_data[2])  ### 假正率为横坐标，真正率为纵坐标做曲线
     # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.0])
     plt.xticks(size=14)
     plt.yticks(size=14)
-    plt.xlabel('False Positive Rate', fontdict={'weight': 'normal', 'size': 18})
-    plt.ylabel('True Positive Rate', fontdict={'weight': 'normal', 'size': 18})
-    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(frameon=False, loc="lower right", prop={'weight': 'normal', 'size': 14})
+    plt.xlabel('False Positive Rate',labelpad=4.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.ylabel('True Positive Rate',labelpad=8.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.title('ROC curve', fontdict={'weight': 'normal', 'size': 20})
+    leg = plt.legend(frameon=False, loc="lower right", prop={'weight': 'normal', 'size': 16})
+    # set the linewidth of each legend object
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(3.0)
 
     plt.subplot(1, 2, 2)
     ax2.spines['right'].set_visible(False)
@@ -728,16 +738,19 @@ def draw_tra_ROC_PRC_curve(roc_datas, prc_datas, config):
 
     plt.xticks(size=14)
     plt.yticks(size=14)
-    plt.xlabel('Recall', fontdict={'weight': 'normal', 'size': 18})
-    plt.ylabel('Precision', fontdict={'weight': 'normal', 'size': 18})
+    plt.xlabel('Recall',labelpad=4.5, fontdict={'weight': 'normal', 'size': 16})
+    plt.ylabel('Precision', labelpad=8.5, fontdict={'weight': 'normal', 'size': 16})
     # plt.plot([0, 1], [1, 0], color='navy', lw=lw, linestyle='--')
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.0])
     plt.xlim([0.0, 1.0])
-    plt.title('PR curve', fontdict={'weight': 'normal', 'size': 23})
-    plt.legend(frameon=False, loc="lower left", prop={'weight': 'normal', 'size': 14})
+    plt.title('Precision-Recall curve', fontdict={'weight': 'normal', 'size': 20})
+    leg = plt.legend(frameon=False, loc="lower left", prop={'weight': 'normal', 'size': 16})
+    # set the linewidth of each legend object
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(3.0)
 
     plt.savefig(
-        '{}/{}.{}'.format(config['savepath'], 'tra_ROC_PRC', 'jpg'))
+        '{}/{}.{}'.format(config['savepath'], 'tra_ROC_PRC', 'png'))
     # plt.show()
 
 
@@ -857,7 +870,7 @@ def draw_negative_density(repres_list, label_list, config):
     plt.legend(bbox_to_anchor=(0.1, 1.4), loc=2, borderaxespad=0, numpoints=1, fontsize=12, frameon=False)
     fig.subplots_adjust(top=0.7, left=0.2)
     plt.tight_layout()
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'negative_density', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'negative_density', 'png'))
     # plt.show()
 
 
@@ -886,7 +899,7 @@ def draw_positive_density(repres_list, label_list, config):
     plt.legend(bbox_to_anchor=(0.1, 1.4), loc=2, borderaxespad=0, numpoints=1, fontsize=12, frameon=False)
     fig.subplots_adjust(top=0.7, left=0.2)
     plt.tight_layout()
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'positive_density', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'positive_density', 'png'))
     # plt.show()
 
 
@@ -941,7 +954,7 @@ def epoch_plot(epoch_data, num_of_moudel, config):
     ax1.legend(frameon=False)
     ax2.legend(frameon=False)
 
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'epoch_plot', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'epoch_plot', 'png'))
 
 
 def draw_result_histogram(data, data_temp, config):
@@ -970,7 +983,7 @@ def draw_result_histogram(data, data_temp, config):
         legobj.set_linewidth(2.0)
 
     fig.tight_layout()  # 自动调整子图充满整个屏幕
-    plt.savefig('{}/{}.{}'.format(config['savepath'], 'result_histogram', 'jpg'))
+    plt.savefig('{}/{}.{}'.format(config['savepath'], 'result_histogram', 'png'))
     # plt.show()
 
 
@@ -1085,7 +1098,7 @@ def draw_plots(data, config):
             ax.set_xlabel('SHAP value of ' + config['names'][i])
             trans = ts.ScaledTranslation(-20 / 72, 7 / 72, fig2.dpi_scale_trans)
             ax.text(-0.1, 1.0, tag[i], transform=ax.transAxes + trans, fontweight='bold',
-                    fontdict={'weight': 'bold', 'size': 14})
+                    fontdict={ 'size': 14 })
         plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=1.1, hspace=0.3)
         plt.savefig('{}/{}.{}'.format(config['savepath'], 'SHAP', 'png'))
         # plt.show()

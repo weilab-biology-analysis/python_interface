@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from transformers import BertTokenizer, BertConfig, BertModel
+# from pytorch_transformers import BertTokenizer, BertConfig, BertModel
 
 import sys
 import os

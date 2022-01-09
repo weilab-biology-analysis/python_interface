@@ -20,8 +20,8 @@ def get_config():
 
     # 路径参数
     # parse.add_argument('-path-data', type=str, default='../data/test.txt', help='训练数据的位置')
-    # parse.add_argument('-path-data', type=str, default='../data/6mA_R.chinensis.txt', help='训练数据的位置')
-    parse.add_argument('-path-data', type=str, default='/home/wrh/weilab_server/python_interface/data/test.txt', help='训练数据的位置')
+    parse.add_argument('-path-data', type=str, default='../data/6mA_R.chinensis.txt', help='训练数据的位置')
+    # parse.add_argument('-path-data', type=str, default='/home/wrh/weilab_server/python_interface/data/test.txt', help='训练数据的位置')
     parse.add_argument('-path-params', type=str, default=None, help='模型参数路径')
     # parse.add_argument('-path-params', type=str, default='../result/SL_train_00/BERT, MCC[0.60].pt', help='模型参数路径')
     parse.add_argument('-model-save-name', type=str, default='model', help='保存模型的命名')
@@ -43,7 +43,7 @@ def get_config():
     parse.add_argument('-interval-valid', type=int, default=1, help='经过多少epoch对交叉验证集进行测试')
     parse.add_argument('-interval-test', type=int, default=1, help='经过多少epoch对测试集进行测试')
 
-    parse.add_argument('-epoch', type=int, default=10, help='迭代次数')
+    parse.add_argument('-epoch', type=int, default=50, help='迭代次数')
     parse.add_argument('-optimizer', type=str, default='Adam', help='优化器名称')
     # parse.add_argument('-optimizer', type=str, default='AdamW', help='优化器名称')
     parse.add_argument('-loss-func', type=str, default='CE', help='损失函数名称, CE/FL')

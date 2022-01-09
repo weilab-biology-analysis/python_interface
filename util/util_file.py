@@ -110,6 +110,17 @@ def txt2fasta(trainpos, trainneg, testpos, testneg, new):
                 f.write(i)
                 f.write('\n')
 
+def txt2fasta_one(trainpos, trainneg, testpos, testneg, new):
+    with open(new , 'w') as f:
+        with open(trainpos, 'r') as file:
+            content = file.read()
+            content_split = content.split('\n')
+            for i in content_split:
+                f.write('>pos|1|testing\n')
+                f.write(i)
+                f.write('\n')
+
+
 if __name__ == '__main__':
     txt2fasta('../data/suplementdata/6mA_R.chinensis/train_pos.txt',
               '../data/suplementdata/6mA_R.chinensis/train_neg.txt',

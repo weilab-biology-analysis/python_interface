@@ -3,11 +3,14 @@ import io
 
 DNA = {
     "[PAD]": 0,
-    "[CLS]": 1,
-    "A": 2,
-    "C": 3,
-    "T": 4,
-    "G": 5
+    '[UNK]': 1,
+    '[CLS]': 2,
+    '[SEP]': 3,
+    '[MASK]': 4,
+    "A": 5,
+    "C": 6,
+    "T": 7,
+    "G": 8
 }
 
 RNA = {
@@ -28,13 +31,13 @@ if __name__ == '__main__':
     pickle.dump(DNA, f)
     f.close()
 
-    f = open("./RNAtoken2index.pkl", "wb")
-    pickle.dump(RNA, f)
-    f.close()
-    #
-    f = open("./proteintoken2index.pkl", "wb")
-    pickle.dump(protein, f)
-    f.close()
+    # f = open("./RNAtoken2index.pkl", "wb")
+    # pickle.dump(RNA, f)
+    # f.close()
+    # #
+    # f = open("./proteintoken2index.pkl", "wb")
+    # pickle.dump(protein, f)
+    # f.close()
 
     # protein = pickle.load(open('./proteintoken2index.pkl', 'rb'))
     # print(protein)
